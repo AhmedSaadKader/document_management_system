@@ -12,6 +12,7 @@
       "strictFunctionTypes": true,
       "strictNullChecks": true,
       "noImplicitThis": true,
+      "esModuleInterop": true
   },
   "exclude": ["node_modules", "spec"]
 }
