@@ -29,7 +29,7 @@ The Document Management System (DMS) is a web application built using the MERN s
   - **NoSQL Database**: MongoDB (for workspace and document management)
 - **Storage**: AWS S3 or other cloud storage services for document storage
 - **Security**: JWT for session management, bcrypt for password hashing
-- **Testing**: Jest, Mocha, or your preferred testing framework
+- **Testing**: Jasmine
 
 ## Installation
 
