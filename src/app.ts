@@ -12,7 +12,7 @@ app.use(express.json());
 app.use(cors());
 
 app.get('/', function (req: Request, res: Response) {
-  res.send('Documnet Management System');
+  res.send('Document Management System');
 });
 
 app.listen(port, () => {
