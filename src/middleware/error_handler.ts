@@ -42,8 +42,8 @@ class UserCreationError extends Error {
 }
 
 class UserUpdateError extends Error {
-  constructor(id: string | number) {
-    super(`Unable to update user with id "${id}"`);
+  constructor(username: string | number) {
+    super(`Unable to update user with id "${username}"`);
     this.name = 'UserUpdateError';
   }
 }
