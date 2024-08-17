@@ -63,8 +63,8 @@ class DatabaseConnectionError extends Error {
   /**
    * Creates an instance of DatabaseConnectionError.
    */
-  constructor() {
-    super('There was an issue connecting to the database');
+  constructor(errorMessage: string) {
+    super(`There was an issue connecting to the database: ${errorMessage}`);
     this.name = 'DatabaseConnectionError';
   }
 }
