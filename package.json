@@ -6,7 +6,8 @@
   "scripts": {
     "start": "nodemon src/app.ts",
     "build": "npx tsc",
-    "test": "npm run build && jasmine",
+    "test": "set ENV=test&& db-migrate db:drop item_store_test && db-migrate db:create item_store_test && db-migrate --env test up && npm run build && npm run jasmine && db-migrate db:drop item_store_test",
+    "migrate": "db-migrate --env test up && db-migrate up",
     "lint": "eslint src/**/*.ts",
     "prettier": "prettier --config .prettierrc --write src/**/*.ts"
   },
