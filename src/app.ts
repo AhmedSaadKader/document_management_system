@@ -1,6 +1,7 @@
 import express, { Request, Response } from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
+import userRouter from './routes/user_routes';
 
 // Load environment variables from a .env file into process.env
 dotenv.config();
@@ -14,6 +15,8 @@ const port = process.env.PORT || '5000';
 // Define the address of the application for logging purposes
 const address = `localhost:${port}`;
 
+const apiVersion = '/api/v1';
+
 // Middleware to parse JSON request bodies
 app.use(express.json());
 
@@ -25,6 +28,8 @@ app.use(cors());
 app.get('/', function (req: Request, res: Response) {
   res.send('Document Management System');
 });
+
+app.use(apiVersion + '/users', userRouter);
 
 // Start the server and listen for incoming requests on the specified port
 app.listen(port, () => {

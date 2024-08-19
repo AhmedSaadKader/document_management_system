@@ -1,5 +1,12 @@
 import { connectionSQLResult } from '../utils/sql_query';
 import { comparePassword, hashPassword } from '../utils/password_utils';
+import {
+  UserNotFoundError,
+  InvalidPasswordError,
+  NoUsersError,
+  UserCreationError,
+  UserUpdateError,
+} from '../middleware/error_handler';
 
 /**
  * Base type for user-related data.
@@ -18,6 +25,9 @@ export type UserBase = {
 
   /** User's email address */
   email: string;
+
+  /** User's role */
+  role: string;
 };
 
 /**
@@ -60,7 +70,7 @@ export class UserModel {
    * @returns The user object if found.
    * @throws UserNotFoundError if the username does not exist.
    */
-  private async usernameExists(username: string): Promise<User> {
+  async usernameExists(username: string): Promise<User> {
     const sql = 'SELECT * FROM users WHERE username=($1)';
     const result = await connectionSQLResult(sql, [username]);
     if (!result.rows.length) throw new UserNotFoundError(username);
@@ -105,9 +115,9 @@ export class UserModel {
    * @throws UserCreationError if the user could not be created.
    */
   async create(userData: UserData): Promise<User> {
-    const { first_name, last_name, username, password, email } = userData;
+    const { first_name, last_name, username, email, password, role } = userData;
     const sql =
-      'INSERT INTO users (first_name, last_name, username, email, password_digest) VALUES  ($1, $2, $3, $4, $5) RETURNING *';
+      'INSERT INTO users (first_name, last_name, username, email, password_digest, role) VALUES  ($1, $2, $3, $4, $5) RETURNING *';
     const password_digest = await hashPassword(password);
     const result = await connectionSQLResult(sql, [
       first_name,
@@ -115,6 +125,7 @@ export class UserModel {
       username,
       email,
       password_digest,
+      role,
     ]);
     if (result.rows.length == 0) throw new UserCreationError(username);
     return result.rows[0];
@@ -142,7 +153,7 @@ export class UserModel {
    * @returns The updated user object.
    * @throws UserUpdateError if the username could not be updated.
    */
-  async update(username: string | number, newUsername?: string): Promise<User> {
+  async update(username: string, newUsername?: string): Promise<User> {
     const sql =
       'UPDATE users SET username=($1) WHERE username=($2) RETURNING *';
     const result = await connectionSQLResult(sql, [

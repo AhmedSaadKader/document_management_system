@@ -1,9 +1,7 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-
 /**
  * Custom error class to handle cases where a user is not found.
  */
-class UserNotFoundError extends Error {
+export class UserNotFoundError extends Error {
   /**
    * Creates an instance of UserNotFoundError.
    *
@@ -18,7 +16,7 @@ class UserNotFoundError extends Error {
 /**
  * Custom error class to handle cases where no users are available.
  */
-class NoUsersError extends Error {
+export class NoUsersError extends Error {
   /**
    * Creates an instance of NoUsersError.
    */
@@ -31,7 +29,7 @@ class NoUsersError extends Error {
 /**
  * Custom error class to handle cases where the provided password is incorrect.
  */
-class InvalidPasswordError extends Error {
+export class InvalidPasswordError extends Error {
   /**
    * Creates an instance of InvalidPasswordError.
    */
@@ -44,7 +42,7 @@ class InvalidPasswordError extends Error {
 /**
  * Custom error class to handle cases where a user already exists.
  */
-class UserAlreadyExistsError extends Error {
+export class UserAlreadyExistsError extends Error {
   /**
    * Creates an instance of UserAlreadyExistsError.
    *
@@ -59,7 +57,7 @@ class UserAlreadyExistsError extends Error {
 /**
  * Custom error class to handle database connection issues.
  */
-class DatabaseConnectionError extends Error {
+export class DatabaseConnectionError extends Error {
   /**
    * Creates an instance of DatabaseConnectionError.
    */
@@ -72,7 +70,7 @@ class DatabaseConnectionError extends Error {
 /**
  * Custom error class to handle user creation errors.
  */
-class UserCreationError extends Error {
+export class UserCreationError extends Error {
   /**
    * Creates an instance of UserCreationError.
    *
@@ -87,13 +85,13 @@ class UserCreationError extends Error {
 /**
  * Custom error class to handle user update errors.
  */
-class UserUpdateError extends Error {
+export class UserUpdateError extends Error {
   /**
    * Creates an instance of UserUpdateError.
    *
    * @param username - The username or ID of the user that could not be updated.
    */
-  constructor(username: string | number) {
+  constructor(username: string) {
     super(`Unable to update user with id "${username}"`);
     this.name = 'UserUpdateError';
   }
@@ -102,7 +100,7 @@ class UserUpdateError extends Error {
 /**
  * Custom error class to handle user deletion errors.
  */
-class UserDeletionError extends Error {
+export class UserDeletionError extends Error {
   /**
    * Creates an instance of UserDeletionError.
    *

@@ -1,4 +1,5 @@
 import client from '../database';
+import { DatabaseConnectionError } from '../middleware/error_handler';
 
 /**
  * Executes an SQL query and returns the result.
