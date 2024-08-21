@@ -35,9 +35,6 @@ export const connectionSQLResult = async (
     // Return the result of the query
     return result;
   } catch (err) {
-    // Release the connection before throwing an error
-    conn.release();
-
     // Throw a custom error from the error_handler module
     throw new DatabaseConnectionError(err as string);
   } finally {
