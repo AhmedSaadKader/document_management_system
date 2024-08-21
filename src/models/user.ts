@@ -14,6 +14,9 @@ import {
  * This type defines the common properties used for both user creation and user representation.
  */
 export type UserBase = {
+  /** User's national id */
+  national_id: string;
+
   /** User's first name */
   first_name: string;
 
@@ -70,10 +73,11 @@ export class UserModel {
    * @returns The user object if found.
    * @throws UserNotFoundError if the username does not exist.
    */
-  async usernameExists(username: string): Promise<User> {
+  async usernameExists(username: string): Promise<User | void> {
     const sql = 'SELECT * FROM users WHERE username=($1)';
     const result = await connectionSQLResult(sql, [username]);
-    if (!result.rows.length) throw new UserNotFoundError(username);
+    if (!result.rows.length) return;
+    console.log(result.rows[0]);
     return result.rows[0];
   }
 
@@ -115,11 +119,21 @@ export class UserModel {
    * @throws UserCreationError if the user could not be created.
    */
   async create(userData: UserData): Promise<User> {
-    const { first_name, last_name, username, email, password, role } = userData;
-    const sql =
-      'INSERT INTO users (first_name, last_name, username, email, password_digest, role) VALUES  ($1, $2, $3, $4, $5) RETURNING *';
+    const {
+      national_id,
+      first_name,
+      last_name,
+      username,
+      email,
+      password,
+      role,
+    } = userData;
+    const sql = `INSERT INTO 
+      users (national_id, first_name, last_name, username, email, password_digest, role)
+      VALUES  ($1, $2, $3, $4, $5, $6, $7) RETURNING *`;
     const password_digest = await hashPassword(password);
     const result = await connectionSQLResult(sql, [
+      national_id,
       first_name,
       last_name,
       username,

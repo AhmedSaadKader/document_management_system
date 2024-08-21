@@ -2,6 +2,7 @@ import express, { Request, Response } from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import userRouter from './routes/user_routes';
+import globalErrorHandler from './middleware/global_error_handler';
 
 // Load environment variables from a .env file into process.env
 dotenv.config();
@@ -30,6 +31,9 @@ app.get('/', function (req: Request, res: Response) {
 });
 
 app.use(apiVersion + '/users', userRouter);
+
+// Register the global error handler at the end
+app.use(globalErrorHandler);
 
 // Start the server and listen for incoming requests on the specified port
 app.listen(port, () => {

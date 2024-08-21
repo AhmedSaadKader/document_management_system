@@ -83,6 +83,21 @@ export class UserCreationError extends Error {
 }
 
 /**
+ * Custom error class to handle user login errors.
+ */
+export class UserLoginError extends Error {
+  /**
+   * Creates an instance of UserLoginError.
+   *
+   * @param username - The username of the user that could not be created.
+   */
+  constructor(username: string) {
+    super(`Error logging in ${username}. Please provide all values.`);
+    this.name = 'UserCreationError';
+  }
+}
+
+/**
  * Custom error class to handle user update errors.
  */
 export class UserUpdateError extends Error {
