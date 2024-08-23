@@ -126,3 +126,23 @@ export class UserDeletionError extends Error {
     this.name = 'UserDeletionError';
   }
 }
+
+/**
+ * Custom error class to handle cases where a resource is not found.
+ */
+export class NotFoundError extends Error {
+  /**
+   * Creates an instance of NotFoundError.
+   *
+   * @param resourceName - The name of the resource that was not found.
+   * @param identifier - The identifier of the resource that was not found (e.g., ID, name, etc.).
+   */
+  constructor(resourceName: string, identifier?: string | number) {
+    const message = identifier
+      ? `${resourceName} with identifier "${identifier}" not found`
+      : `${resourceName} not found`;
+
+    super(message);
+    this.name = 'NotFoundError';
+  }
+}

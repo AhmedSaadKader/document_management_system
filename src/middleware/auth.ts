@@ -19,6 +19,7 @@ const auth = async (
       process.env.TOKEN_SECRET as string
     ) as JwtPayload;
     req.user = { ...tokenVerified };
+    console.log(req.user);
     next();
   } catch (error) {
     next(error);
