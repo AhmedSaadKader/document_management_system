@@ -1,7 +1,7 @@
 import { Request } from 'express';
 
 type UserPayload = {
-  id?: number | string;
+  national_id?: number | string;
   username?: string;
   iat?: string | number;
 };

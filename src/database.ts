@@ -1,4 +1,5 @@
 import dotenv from 'dotenv';
+import mongoose from 'mongoose';
 import { Pool } from 'pg';
 
 // Load environment variables from a .env file into process.env
@@ -16,17 +17,19 @@ const {
 
 // Create a new Pool instance for managing PostgreSQL connections
 // Default configuration is empty and will be overwritten based on environment
-let client = new Pool({
+export let sqlClient = new Pool({
   host: '',
   database: '',
   user: '',
   password: '',
 });
 
+export const mongoClient = mongoose.connect('mongodb://localhost:27017/test');
+
 // Configure the Pool based on the environment
 // Development environment
 if (ENV == 'dev') {
-  client = new Pool({
+  sqlClient = new Pool({
     host: POSTGRES_HOST,
     database: POSTGRES_DB,
     user: POSTGRES_USER,
@@ -36,13 +39,10 @@ if (ENV == 'dev') {
 
 // Test environment
 if (ENV == 'test') {
-  client = new Pool({
+  sqlClient = new Pool({
     host: POSTGRES_HOST,
     database: POSTGRES_DB_TEST,
     user: POSTGRES_USER,
     password: POSTGRES_PASSWORD,
   });
 }
-
-// Export the configured Pool instance for use in other parts of the application
-export default client;

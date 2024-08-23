@@ -49,8 +49,12 @@ export const registerUser = async (
       password,
       role,
     });
-    const token = createJWT(newUser.national_id as string, newUser.username);
-    res.json({ token, username: newUser.username, national_id: newUser.id });
+    const token = createJWT(newUser.national_id, newUser.username);
+    res.json({
+      token,
+      username: newUser.username,
+      national_id: newUser.national_id,
+    });
   } catch (error) {
     next(error);
   }
@@ -67,11 +71,11 @@ export const loginUser = async (
   }
   try {
     const createdUser = await user.authenticateUser(username, password);
-    const token = createJWT(createdUser.id, createdUser.username);
+    const token = createJWT(createdUser.national_id, createdUser.username);
     res.json({
       token,
       username: createdUser.username,
-      national_id: createdUser.id,
+      national_id: createdUser.national_id,
     });
   } catch (error) {
     next(error);
@@ -105,7 +109,7 @@ export const updateUser = async (
     const username = req.user?.username as string;
     const userId = req.params.id;
     const getUser = await user.usernameExists(username);
-    if (userId !== getUser?.id) {
+    if (userId !== getUser?.national_id) {
       throw new Error('Unauthorized to edit this user');
     }
     const newUsername = req.body.username;

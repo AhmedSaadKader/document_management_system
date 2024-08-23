@@ -1,4 +1,4 @@
-import client from '../database';
+import { sqlClient } from '../database';
 import { DatabaseConnectionError } from '../middleware/error_handler';
 
 /**
@@ -8,7 +8,7 @@ import { DatabaseConnectionError } from '../middleware/error_handler';
  * @param sqlParams - An array of parameters to be used in the SQL query.
  * @returns The result of the SQL query execution.
  *
- * This function connects to the PostgreSQL database using the `client` instance
+ * This function connects to the PostgreSQL database using the `sqlClient` instance
  * imported from the `database` module, executes the provided SQL query with the
  * given parameters, and returns the result. The connection is released after
  * the query execution.
@@ -27,7 +27,7 @@ export const connectionSQLResult = async (
   sqlQuery: string,
   sqlParams: (string | number)[]
 ) => {
-  const conn = await client.connect();
+  const conn = await sqlClient.connect();
   try {
     // Execute the query
     const result = await conn.query(sqlQuery, [...sqlParams]);

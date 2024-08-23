@@ -39,9 +39,6 @@ export type UserBase = {
  * This type extends UserBase with additional fields required for user management.
  */
 export type User = UserBase & {
-  /** Unique identifier for the user */
-  id: string;
-
   /** Hashed password for secure storage */
   password_digest: string;
 

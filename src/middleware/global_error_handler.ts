@@ -44,7 +44,7 @@ const globalErrorHandler = (err: Error, req: Request, res: Response) => {
   }
 
   // Handle any other errors that were not caught explicitly
-  return res.status(500).json({ error: 'An unexpected error occurred' });
+  return res.status(500).json({ error: err.message });
 };
 
 export default globalErrorHandler;
