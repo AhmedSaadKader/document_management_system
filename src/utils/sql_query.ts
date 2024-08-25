@@ -20,7 +20,6 @@ import { DatabaseConnectionError } from '../middleware/error_handler';
  *
  * ```typescript
  * const result = await connectionSQLResult('SELECT * FROM users WHERE id = $1', [1]);
- * console.log(result.rows);
  * ```
  */
 export const connectionSQLResult = async (

@@ -6,6 +6,7 @@ import {
   DatabaseConnectionError,
   NotFoundError,
 } from '../middleware/error_handler';
+import { uploadFile } from '../utils/s3_utils';
 
 export const getAllDocuments = async (
   req: RequestAuth,
@@ -45,5 +46,23 @@ export const createDocument = async (
     res.status(201).json(document);
   } catch (err) {
     next(new Error((err as Error).message));
+  }
+};
+
+export const uploadDocument = async (req: RequestAuth, res: Response) => {
+  if (!req.file) {
+    return res.status(400).send('No file uploaded.');
+  }
+
+  try {
+    const bucketName = process.env.AWS_BUCKET_NAME;
+    const fileKey = req.file.originalname; // Use the original file name or generate a unique key
+    const fileBody = req.file.buffer;
+    const contentType = req.file.mimetype;
+
+    await uploadFile(bucketName as string, fileKey, fileBody, contentType);
+    res.status(200).send('File uploaded successfully.');
+  } catch (error) {
+    res.status(500).send(`Error uploading file: ${(error as Error).message}`);
   }
 };
