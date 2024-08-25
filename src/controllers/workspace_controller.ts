@@ -27,7 +27,6 @@ export const getWorkspaceById = async (
   next: NextFunction
 ) => {
   const { workspaceId } = req.params;
-  console.log(workspaceId);
 
   try {
     const workspace =
@@ -45,7 +44,6 @@ export const getWorkspaceById = async (
 
     res.json(workspace);
   } catch (err) {
-    console.log((err as Error).message);
     next(new DatabaseConnectionError((err as Error).message));
   }
 };
