@@ -5,6 +5,7 @@ import {
   loginUser,
   registerUser,
   updateUser,
+  getUserData,
 } from '../controllers/user_controllers';
 import auth from '../middleware/auth';
 
@@ -17,6 +18,8 @@ router.post('/register', registerUser);
 router.post('/login', loginUser);
 
 router.use(auth);
+
+router.get('/:username', getUserData);
 
 router.delete('/:username', deleteUser);
 

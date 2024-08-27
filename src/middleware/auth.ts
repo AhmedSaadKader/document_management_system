@@ -10,7 +10,6 @@ const auth = async (
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer')) {
     res.status(401).send('Authentication invalid');
-    // throw new Error('Authentication invalid');
   }
   const token = authHeader?.split(' ')[1];
   try {
@@ -19,7 +18,6 @@ const auth = async (
       process.env.TOKEN_SECRET as string
     ) as JwtPayload;
     req.user = { ...tokenVerified };
-    console.log(req.user);
     next();
   } catch (error) {
     next(error);

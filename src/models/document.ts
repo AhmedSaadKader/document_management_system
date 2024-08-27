@@ -5,6 +5,11 @@ const documentSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  user: {
+    type: String,
+    ref: 'Users',
+    required: true,
+  },
   createdAt: {
     type: Date,
     default: Date.now,

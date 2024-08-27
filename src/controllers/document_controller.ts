@@ -36,7 +36,11 @@ export const createDocument = async (
     }
 
     // Create and save the new document
-    const document = new Document({ documentName, workspace: workspace });
+    const document = new Document({
+      documentName,
+      user: req.user!.national_id,
+      workspace: workspace,
+    });
     await document.save();
 
     // Add the document to the workspace
