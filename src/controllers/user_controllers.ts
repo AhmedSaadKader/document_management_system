@@ -22,6 +22,20 @@ export const getAllUsers = async (
   }
 };
 
+export const getUserData = async (
+  req: RequestAuth,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { username } = req.params;
+    const userData = await user.usernameExists(username);
+    res.json(userData);
+  } catch (err) {
+    next(err);
+  }
+};
+
 export const registerUser = async (
   req: Request,
   res: Response,

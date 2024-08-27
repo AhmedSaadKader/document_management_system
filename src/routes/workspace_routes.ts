@@ -5,6 +5,8 @@ import {
   updateWorkspace,
   deleteWorkspace,
   getWorkspaceById,
+  addDocumentToWorkspace,
+  deleteDocumentFromWorkspace,
 } from '../controllers/workspace_controller';
 import auth from '../middleware/auth';
 
@@ -27,5 +29,12 @@ router.put('/:workspaceId', updateWorkspace);
 
 // Route to delete a specific workspace by ID
 router.delete('/:workspaceId', deleteWorkspace);
+
+router.post('/:workspaceId/documents', addDocumentToWorkspace);
+
+router.delete(
+  '/:workspaceId/documents/:documentId',
+  deleteDocumentFromWorkspace
+);
 
 export default router;

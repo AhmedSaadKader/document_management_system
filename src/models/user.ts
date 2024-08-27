@@ -74,7 +74,6 @@ export class UserModel {
     const sql = 'SELECT * FROM users WHERE username=($1)';
     const result = await connectionSQLResult(sql, [username]);
     if (!result.rows.length) return;
-    console.log(result.rows[0]);
     return result.rows[0];
   }
 
@@ -105,6 +104,13 @@ export class UserModel {
     const sql = 'SELECT * FROM users';
     const result = await connectionSQLResult(sql, []);
     if (result.rows.length == 0) throw new NoUsersError();
+    return result.rows;
+  }
+
+  async findById(username: string): Promise<User[]> {
+    const sql = 'SELECT * FROM users WHERE username=($1)';
+    const result = await connectionSQLResult(sql, [username]);
+    if (!result.rows.length) throw new NoUsersError();
     return result.rows;
   }
 
