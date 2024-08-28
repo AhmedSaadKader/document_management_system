@@ -22,7 +22,7 @@ router.use(auth);
 router.get('/', getAllDocuments);
 
 // Route to create a new document
-router.post('/', createDocument);
+// router.post('/', createDocument);
 
 // Route to filter documents
 router.get('/filter', filterDocuments);

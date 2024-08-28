@@ -23,9 +23,8 @@ export const getAllDocuments = async (
     }
 
     // Fetch documents belonging to the authenticated user
-    const documents = await Document.find({ user: userId })
-      .where('deleted')
-      .equals('false');
+    const documents = await Document.find({ user: userId, deleted: false });
+
     res.json(documents);
   } catch (err) {
     next(new DatabaseConnectionError((err as Error).message));
@@ -249,7 +248,7 @@ export const filterDocuments = async (
     const userId = req.user!.national_id;
     const { search, sortBy, order = 'asc' } = req.query;
 
-    let query = Document.find({ user: userId });
+    let query = Document.find({ user: userId, deleted: false });
 
     // Search by document name
     if (search) {
