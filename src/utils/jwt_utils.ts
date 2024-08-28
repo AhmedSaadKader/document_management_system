@@ -19,5 +19,7 @@ import jwt from 'jsonwebtoken';
  * ```
  */
 export const createJWT = (national_id: string, username: string): string => {
-  return jwt.sign({ national_id, username }, process.env.TOKEN_SECRET!);
+  return jwt.sign({ national_id, username }, process.env.TOKEN_SECRET!, {
+    expiresIn: '24h',
+  });
 };

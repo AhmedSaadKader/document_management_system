@@ -7,8 +7,11 @@ import {
   getWorkspaceById,
   addDocumentToWorkspace,
   deleteDocumentFromWorkspace,
+  downloadDocumentFromWorkspace,
+  viewDocumentFromWorkspace,
 } from '../controllers/workspace_controller';
 import auth from '../middleware/auth';
+import { uploadFileMiddleware } from '../utils/file_upload_utils';
 
 const router = Router();
 
@@ -30,11 +33,25 @@ router.put('/:workspaceId', updateWorkspace);
 // Route to delete a specific workspace by ID
 router.delete('/:workspaceId', deleteWorkspace);
 
-router.post('/:workspaceId/documents', addDocumentToWorkspace);
+router.post(
+  '/:workspaceId/documents',
+  uploadFileMiddleware,
+  addDocumentToWorkspace
+);
 
 router.delete(
   '/:workspaceId/documents/:documentId',
   deleteDocumentFromWorkspace
+);
+
+router.get(
+  '/:workspaceId/documents/:documentId/download',
+  downloadDocumentFromWorkspace
+);
+
+router.get(
+  '/:workspaceId/documents/:documentId/view',
+  viewDocumentFromWorkspace
 );
 
 export default router;
