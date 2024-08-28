@@ -23,7 +23,9 @@ export const getAllDocuments = async (
     }
 
     // Fetch documents belonging to the authenticated user
-    const documents = await Document.find({ user: userId });
+    const documents = await Document.find({ user: userId })
+      .where('deleted')
+      .equals('false');
     res.json(documents);
   } catch (err) {
     next(new DatabaseConnectionError((err as Error).message));
@@ -55,6 +57,31 @@ export const createDocument = async (
     // Add the document to the workspace
     workspaceObject.documents.push(document._id);
     await workspaceObject.save();
+
+    res.status(201).json(document);
+  } catch (err) {
+    next(new Error((err as Error).message));
+  }
+};
+
+export const getDocumentDetails = async (
+  req: RequestAuth,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { documentId } = req.params;
+    console.log(documentId);
+    const document = await Document.findById(documentId);
+    if (!document) {
+      return next(new NotFoundError('Document not found'));
+    }
+
+    if (document.user !== req.user!.national_id) {
+      return res
+        .status(403)
+        .json({ message: 'Not authorized to view this workspace' });
+    }
 
     res.status(201).json(document);
   } catch (err) {
@@ -197,7 +224,6 @@ export const previewDocument = async (
     // Read the file data
     fs.readFile(filePath, (err, data) => {
       if (err) {
-        console.log(err.message);
         return res
           .status(500)
           .json({ message: 'Failed to read the document file' });
@@ -211,5 +237,37 @@ export const previewDocument = async (
     });
   } catch (err) {
     next(new Error((err as Error).message));
+  }
+};
+
+export const filterDocuments = async (
+  req: RequestAuth,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const userId = req.user!.national_id;
+    const { search, sortBy, order = 'asc' } = req.query;
+
+    let query = Document.find({ user: userId });
+
+    // Search by document name
+    if (search) {
+      query = query
+        .where('documentName')
+        .regex(new RegExp(search as string, 'i'));
+    }
+
+    // Sort by specified field
+    if (sortBy) {
+      const sortOrder = order === 'desc' ? -1 : 1;
+      query = query.sort({ [sortBy as string]: sortOrder });
+    }
+
+    const documents = await query.exec();
+
+    res.json(documents);
+  } catch (err) {
+    next(new DatabaseConnectionError((err as Error).message));
   }
 };

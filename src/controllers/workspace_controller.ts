@@ -139,11 +139,6 @@ export const addDocumentToWorkspace = async (
     const { documentName } = req.body;
     const workspace = await Workspace.findById(workspaceId);
 
-    console.log(workspace);
-
-    console.log(file);
-    console.log(documentName);
-
     if (!workspace) {
       return res.status(404).json({ message: 'Workspace not found' });
     }
