@@ -24,7 +24,11 @@ const apiVersion = '/api/v1';
 app.use(express.json());
 
 // Middleware to enable Cross-Origin Resource Sharing (CORS)
-app.use(cors());
+app.use(
+  cors({
+    exposedHeaders: ['Content-Disposition'],
+  })
+);
 
 // Route handler for the root path
 // Sends a simple response to indicate that the server is running

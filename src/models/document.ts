@@ -1,5 +1,15 @@
 import mongoose from 'mongoose';
 
+interface Document extends mongoose.Document {
+  documentName: string;
+  workspace: mongoose.Types.ObjectId;
+  user: string;
+  deleted: boolean;
+  deletedAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 const documentSchema = new mongoose.Schema({
   documentName: {
     type: String,
@@ -9,6 +19,10 @@ const documentSchema = new mongoose.Schema({
     type: String,
     ref: 'Users',
     required: true,
+  },
+  deleted: {
+    type: Boolean,
+    default: false,
   },
   createdAt: {
     type: Date,
@@ -21,6 +35,18 @@ const documentSchema = new mongoose.Schema({
   workspace: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Workspaces',
+    required: true,
+  },
+  filePath: {
+    type: String,
+    required: true,
+  },
+  originalFileName: {
+    type: String,
+    required: true,
+  },
+  fileSize: {
+    type: Number,
     required: true,
   },
 });
