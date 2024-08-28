@@ -12,6 +12,7 @@ import {
 } from '../controllers/workspace_controller';
 import auth from '../middleware/auth';
 import { uploadFileMiddleware } from '../utils/file_upload_utils';
+import { filterDocuments } from '../controllers/document_controller';
 
 const router = Router();
 
@@ -53,5 +54,7 @@ router.get(
   '/:workspaceId/documents/:documentId/view',
   viewDocumentFromWorkspace
 );
+
+router.get('/:workspaceId/documents/filter', filterDocuments);
 
 export default router;
