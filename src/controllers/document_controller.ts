@@ -6,7 +6,7 @@ import {
   DatabaseConnectionError,
   NotFoundError,
 } from '../middleware/error_handler';
-import { uploadFile } from '../utils/s3_utils';
+import { createBucket, uploadFile } from '../utils/s3_utils';
 import path from 'path';
 import fs from 'fs';
 
@@ -88,21 +88,40 @@ export const getDocumentDetails = async (
   }
 };
 
-export const uploadDocument = async (req: RequestAuth, res: Response) => {
+export const uploadDocument = async (
+  req: RequestAuth,
+  res: Response,
+  next: NextFunction
+) => {
   if (!req.file) {
     return res.status(400).send('No file uploaded.');
   }
 
   try {
-    const bucketName = process.env.AWS_BUCKET_NAME;
+    const bucketName = process.env.AWS_BUCKET_NAME as string;
+    // Create the bucket if it doesn't exist
+    try {
+      await createBucket(bucketName);
+      console.log(`Bucket created or already exists: ${bucketName}`);
+    } catch (error) {
+      console.error(`Error creating bucket: ${error}`);
+      return res.status(500).send('Failed to create bucket.');
+    }
     const fileKey = req.file.originalname;
     const fileBody = req.file.buffer;
     const contentType = req.file.mimetype;
 
-    await uploadFile(bucketName as string, fileKey, fileBody, contentType);
-    res.status(200).send('File uploaded successfully.');
+    // Upload to S3
+
+    const result = await uploadFile(bucketName, fileKey, fileBody, contentType);
+
+    // Optionally delete the local file after uploading to S3
+    //  fs.unlinkSync(path.join(uploadDir, req.file.filename));
+
+    res.json({ message: 'File uploaded successfully', result });
   } catch (error) {
-    res.status(500).send(`Error uploading file: ${(error as Error).message}`);
+    console.error(`Error uploading file: ${error}`);
+    next(error);
   }
 };
 
