@@ -3,16 +3,14 @@ import {
   DeleteBucketCommand,
   DeleteObjectCommand,
   GetObjectCommand,
+  ListBucketsCommand,
   PutObjectCommand,
   S3Client,
   S3ClientConfig,
 } from '@aws-sdk/client-s3';
+
 const s3Client = new S3Client({
   region: process.env.AWS_REGION,
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  },
 } as S3ClientConfig);
 
 export const createBucket = async (bucketName: string) => {
@@ -21,7 +19,6 @@ export const createBucket = async (bucketName: string) => {
     console.log(`Bucket created: ${bucketName}`);
   } catch (error) {
     console.error(`Error creating bucket: ${error}`);
-    throw error;
   }
 };
 
@@ -46,6 +43,15 @@ export const uploadFile = async (
   } catch (error) {
     console.error(`Error uploading file: ${error}`);
     throw error;
+  }
+};
+
+export const listBuckets = async () => {
+  try {
+    const response = await s3Client.send(new ListBucketsCommand({}));
+    console.log('Buckets:', response.Buckets);
+  } catch (error) {
+    console.error('Error listing buckets:', error);
   }
 };
 

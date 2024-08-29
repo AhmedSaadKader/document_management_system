@@ -25,28 +25,33 @@ export const getAllWorkspaces = async (
     next(new Error((err as Error).message));
   }
 };
-
 export const getWorkspaceById = async (
   req: RequestAuth,
   res: Response,
   next: NextFunction
 ) => {
-  const { workspaceId } = req.params;
-
   try {
-    const workspace = await Workspace.findById(workspaceId).populate({
-      path: 'documents',
-      match: { deleted: false },
-    });
+    const { workspaceId } = req.params;
+    const { search, sortBy, order = 'asc' } = req.query;
+
+    const sortOrder = order === 'desc' ? -1 : 1;
+
+    // Find the workspace by ID
+    const workspace = await Workspace.findById(workspaceId)
+      .populate({
+        path: 'documents',
+        match: {
+          deleted: false, // Only include documents that are not deleted
+          ...(search && { documentName: { $regex: search, $options: 'i' } }), // Search by document name
+        },
+        options: {
+          sort: sortBy ? { [sortBy as string]: sortOrder } : {}, // Sort by specified field
+        },
+      })
+      .exec();
 
     if (!workspace) {
-      return next(new NotFoundError('Workspace not found'));
-    }
-
-    if (workspace.user !== req.user!.national_id) {
-      return res
-        .status(403)
-        .json({ message: 'Not authorized to view this workspace' });
+      return res.status(404).json({ message: 'Workspace not found' });
     }
 
     res.json(workspace);
