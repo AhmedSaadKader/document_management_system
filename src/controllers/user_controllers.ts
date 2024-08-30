@@ -52,7 +52,10 @@ export const registerUser = async (
   } = req.body;
   try {
     if (await user.usernameExists(username)) {
-      throw new UserAlreadyExistsError(username);
+      res.status(409).json({
+        error: 'Username already exists',
+      });
+      next(new UserAlreadyExistsError(username));
     }
     const newUser = await user.create({
       national_id,

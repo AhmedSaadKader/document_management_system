@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import {
   getAllDocuments,
-  createDocument,
+  // createDocument,
   uploadDocument,
   softDeleteDocument,
   recycleBin,

@@ -8,4 +8,5 @@ type UserPayload = {
 
 export interface RequestAuth extends Request {
   user?: UserPayload;
+  file?: Express.Multer.File;
 }
