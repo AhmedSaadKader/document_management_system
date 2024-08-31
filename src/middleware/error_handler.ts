@@ -5,10 +5,10 @@ export class UserNotFoundError extends Error {
   /**
    * Creates an instance of UserNotFoundError.
    *
-   * @param username - The username of the user that was not found.
+   * @param email - The email of the user that was not found.
    */
-  constructor(username: string) {
-    super(`User with username "${username}" not found`);
+  constructor(email: string) {
+    super(`User with email "${email}" not found`);
     this.name = 'UserNotFoundError';
   }
 }
@@ -46,10 +46,10 @@ export class UserAlreadyExistsError extends Error {
   /**
    * Creates an instance of UserAlreadyExistsError.
    *
-   * @param username - The username of the user that already exists.
+   * @param email - The email of the user that already exists.
    */
-  constructor(username: string) {
-    super(`User with username "${username}" already exists`);
+  constructor(email: string) {
+    super(`User with email "${email}" already exists`);
     this.name = 'UserAlreadyExistsError';
   }
 }
@@ -74,10 +74,10 @@ export class UserCreationError extends Error {
   /**
    * Creates an instance of UserCreationError.
    *
-   * @param username - The username of the user that could not be created.
+   * @param email - The email of the user that could not be created.
    */
-  constructor(username: string) {
-    super(`Error creating ${username}`);
+  constructor(email: string) {
+    super(`Error creating ${email}`);
     this.name = 'UserCreationError';
   }
 }
@@ -89,10 +89,10 @@ export class UserLoginError extends Error {
   /**
    * Creates an instance of UserLoginError.
    *
-   * @param username - The username of the user that could not be created.
+   * @param email - The email of the user that could not be created.
    */
-  constructor(username: string) {
-    super(`Error logging in ${username}. Please provide all values.`);
+  constructor(email: string) {
+    super(`Error logging in ${email}. Please provide all values.`);
     this.name = 'UserCreationError';
   }
 }
@@ -104,10 +104,10 @@ export class UserUpdateError extends Error {
   /**
    * Creates an instance of UserUpdateError.
    *
-   * @param username - The username or ID of the user that could not be updated.
+   * @param email - The email or ID of the user that could not be updated.
    */
-  constructor(username: string) {
-    super(`Unable to update user with id "${username}"`);
+  constructor(email: string) {
+    super(`Unable to update user with id "${email}"`);
     this.name = 'UserUpdateError';
   }
 }
@@ -119,10 +119,10 @@ export class UserDeletionError extends Error {
   /**
    * Creates an instance of UserDeletionError.
    *
-   * @param username - The username of the user that could not be deleted.
+   * @param email - The email of the user that could not be deleted.
    */
-  constructor(username: string) {
-    super(`Unable to delete user with username "${username}"`);
+  constructor(email: string) {
+    super(`Unable to delete user with email "${email}"`);
     this.name = 'UserDeletionError';
   }
 }

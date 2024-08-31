@@ -5,7 +5,6 @@ import {
   InvalidPasswordError,
   NoUsersError,
   UserCreationError,
-  UserUpdateError,
 } from '../middleware/error_handler';
 
 /**
@@ -22,9 +21,6 @@ export type UserBase = {
 
   /** User's last name */
   last_name: string;
-
-  /** User's unique username */
-  username: string;
 
   /** User's email address */
   email: string;
@@ -64,31 +60,31 @@ export type UserData = UserBase & {
  */
 export class UserModel {
   /**
-   * Checks if a username exists in the database.
+   * Checks if a email exists in the database.
    *
-   * @param username - The username to check for existence.
+   * @param email - The email to check for existence.
    * @returns The user object if found.
-   * @throws UserNotFoundError if the username does not exist.
+   * @throws UserNotFoundError if the email does not exist.
    */
-  async usernameExists(username: string): Promise<User | void> {
-    const sql = 'SELECT * FROM users WHERE username=($1)';
-    const result = await connectionSQLResult(sql, [username]);
+  async emailExists(email: string): Promise<User | void> {
+    const sql = 'SELECT * FROM users WHERE email=($1)';
+    const result = await connectionSQLResult(sql, [email]);
     if (!result.rows.length) return;
     return result.rows[0];
   }
 
   /**
-   * Authenticates a user by checking the provided username and password.
+   * Authenticates a user by checking the provided email and password.
    *
-   * @param username - The username of the user to authenticate.
+   * @param email - The email of the user to authenticate.
    * @param password - The plain text password to verify.
    * @returns The authenticated user object if successful.
-   * @throws UserNotFoundError if the username does not exist.
+   * @throws UserNotFoundError if the email does not exist.
    * @throws InvalidPasswordError if the password is incorrect.
    */
-  async authenticateUser(username: string, password: string): Promise<User> {
-    const user = await this.usernameExists(username);
-    if (!user) throw new UserNotFoundError(username);
+  async authenticateUser(email: string, password: string): Promise<User> {
+    const user = await this.emailExists(email);
+    if (!user) throw new UserNotFoundError(email);
     if (!comparePassword(password, user.password_digest))
       throw new InvalidPasswordError();
     return user;
@@ -107,9 +103,9 @@ export class UserModel {
     return result.rows;
   }
 
-  async findById(username: string): Promise<User[]> {
-    const sql = 'SELECT * FROM users WHERE username=($1)';
-    const result = await connectionSQLResult(sql, [username]);
+  async findById(email: string): Promise<User[]> {
+    const sql = 'SELECT * FROM users WHERE email=($1)';
+    const result = await connectionSQLResult(sql, [email]);
     if (!result.rows.length) throw new NoUsersError();
     return result.rows;
   }
@@ -122,62 +118,44 @@ export class UserModel {
    * @throws UserCreationError if the user could not be created.
    */
   async create(userData: UserData): Promise<User> {
-    const {
-      national_id,
-      first_name,
-      last_name,
-      username,
-      email,
-      password,
-      role,
-    } = userData;
+    const { national_id, first_name, last_name, email, password, role } =
+      userData;
     const sql = `INSERT INTO 
-      users (national_id, first_name, last_name, username, email, password_digest, role)
-      VALUES  ($1, $2, $3, $4, $5, $6, $7) RETURNING *`;
+      users (national_id, first_name, last_name, email, password_digest, role)
+      VALUES  ($1, $2, $3, $4, $5, $6) RETURNING *`;
     const password_digest = await hashPassword(password);
     const result = await connectionSQLResult(sql, [
       national_id,
       first_name,
       last_name,
-      username,
       email,
       password_digest,
       role,
     ]);
-    if (result.rows.length == 0) throw new UserCreationError(username);
+    if (result.rows.length == 0) throw new UserCreationError(email);
     return result.rows[0];
   }
 
   /**
-   * Deletes a user from the database by username.
+   * Deletes a user from the database by email.
    *
-   * @param username - The username of the user to delete.
+   * @param email - The email of the user to delete.
    * @returns True if the user was successfully deleted.
-   * @throws UserNotFoundError if the username does not exist.
+   * @throws UserNotFoundError if the email does not exist.
    */
-  async delete(username: string): Promise<boolean> {
-    const sql = 'DELETE FROM users WHERE username=($1)';
-    const result = await connectionSQLResult(sql, [username]);
-    if (result.rows.length === 0) throw new UserNotFoundError(username);
+  async delete(email: string): Promise<boolean> {
+    const sql = 'DELETE FROM users WHERE email=($1)';
+    const result = await connectionSQLResult(sql, [email]);
+    if (result.rows.length === 0) throw new UserNotFoundError(email);
     return true;
   }
 
   /**
-   * Updates a user's username in the database.
+   * Updates a user's data in the database.
    *
-   * @param username - The current username of the user to update.
-   * @param newUsername - The new username to set.
+   * @param email - The current email of the user to update.
    * @returns The updated user object.
-   * @throws UserUpdateError if the username could not be updated.
+   * @throws UserUpdateError if the email could not be updated.
    */
-  async update(username: string, newUsername?: string): Promise<User> {
-    const sql =
-      'UPDATE users SET username=($1) WHERE username=($2) RETURNING *';
-    const result = await connectionSQLResult(sql, [
-      newUsername as string,
-      username,
-    ]);
-    if (result.rows.length == 0) throw new UserUpdateError(username);
-    return result.rows[0];
-  }
+  async update() {}
 }

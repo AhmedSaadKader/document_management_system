@@ -9,6 +9,8 @@ import {
   deleteDocumentFromWorkspace,
   downloadDocumentFromWorkspace,
   viewDocumentFromWorkspace,
+  addEditorToWorkspace,
+  addViewerToWorkspace,
 } from '../controllers/workspace_controller';
 import auth from '../middleware/auth';
 import { uploadFileMiddleware } from '../utils/file_upload_utils';
@@ -56,5 +58,11 @@ router.get(
 );
 
 router.get('/:workspaceId/documents/filter', filterDocuments);
+
+// Route to add an editor to a workspace
+router.post('/:workspaceId/add-editor', addEditorToWorkspace);
+
+// Route to add a viewer to a workspace
+router.post('/:workspaceId/add-viewer', addViewerToWorkspace);
 
 export default router;
