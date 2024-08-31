@@ -1,6 +1,6 @@
 import { Response, NextFunction } from 'express';
 import { RequestAuth } from '../../types';
-import Document from '../models/document';
+import DocumentModel from '../models/document';
 import Workspace from '../models/workspace';
 import {
   DatabaseConnectionError,
@@ -23,7 +23,10 @@ export const getAllDocuments = async (
     }
 
     // Fetch documents belonging to the authenticated user
-    const documents = await Document.find({ user: userId, deleted: false });
+    const documents = await DocumentModel.find({
+      user: userId,
+      deleted: false,
+    });
 
     res.json(documents);
   } catch (err) {
@@ -45,17 +48,28 @@ export const createDocument = async (
       return next(new NotFoundError('Workspace not found'));
     }
 
+    if (!documentName) {
+      throw new Error('Missing document name');
+    }
+
+    if (!req.user!.national_id) {
+      throw new Error('Missing user id');
+    }
+
+    if (!workspace) {
+      throw new Error('Missing workspace');
+    }
+
     // Create and save the new document
-    const document = new Document({
+    const document = new DocumentModel({
       documentName,
       user: req.user!.national_id,
-      workspace: workspace,
+      workspace,
     });
     await document.save();
 
     // Add the document to the workspace
-    workspaceObject.documents.push(document._id);
-    await workspaceObject.save();
+    workspaceObject.addDocument(document._id);
 
     res.status(201).json(document);
   } catch (err) {
@@ -71,7 +85,7 @@ export const getDocumentDetails = async (
   try {
     const { documentId } = req.params;
     console.log(documentId);
-    const document = await Document.findById(documentId);
+    const document = await DocumentModel.findById(documentId);
     if (!document) {
       return next(new NotFoundError('Document not found'));
     }
@@ -132,7 +146,7 @@ export const softDeleteDocument = async (
 ) => {
   try {
     const { documentId } = req.params;
-    const document = await Document.findById(documentId);
+    const document = await DocumentModel.findById(documentId);
 
     if (!document) {
       return next(new NotFoundError('Document not found'));
@@ -154,7 +168,7 @@ export const recycleBin = async (
   next: NextFunction
 ) => {
   try {
-    const documents = await Document.find({ deleted: { $eq: true } });
+    const documents = await DocumentModel.find({ deleted: { $eq: true } });
     res.status(200).json(documents);
   } catch (err) {
     next(new Error((err as Error).message));
@@ -168,7 +182,7 @@ export const restoreDocument = async (
 ) => {
   try {
     const { documentId } = req.params;
-    const document = await Document.findById(documentId);
+    const document = await DocumentModel.findById(documentId);
 
     if (!document) {
       return next(new NotFoundError('Document not found'));
@@ -195,7 +209,7 @@ export const permanentlyDeleteDocument = async (
 ) => {
   try {
     const { documentId } = req.params;
-    const document = await Document.findById(documentId);
+    const document = await DocumentModel.findById(documentId);
 
     if (!document) {
       return next(new NotFoundError('Document not found'));
@@ -206,7 +220,7 @@ export const permanentlyDeleteDocument = async (
     }
 
     // Permanently delete the document
-    await Document.deleteOne({ _id: documentId });
+    await DocumentModel.deleteOne({ _id: documentId });
 
     res
       .status(200)
@@ -225,7 +239,7 @@ export const previewDocument = async (
 
   try {
     // Find the document by ID
-    const document = await Document.findById(documentId);
+    const document = await DocumentModel.findById(documentId);
 
     if (!document) {
       return res.status(404).json({ message: 'Document not found' });
@@ -267,7 +281,7 @@ export const filterDocuments = async (
     const userId = req.user!.national_id;
     const { search, sortBy, order = 'asc' } = req.query;
 
-    let query = Document.find({ user: userId, deleted: false });
+    let query = DocumentModel.find({ user: userId, deleted: false });
 
     // Search by document name
     if (search) {

@@ -261,3 +261,51 @@ export const viewDocumentFromWorkspace = async (
     next(new Error((err as Error).message));
   }
 };
+
+export const addEditorToWorkspace = async (
+  req: RequestAuth,
+  res: Response,
+  next: NextFunction
+) => {
+  const { workspaceId, userId } = req.body;
+
+  try {
+    const workspace = await Workspace.findById(workspaceId);
+    if (!workspace) {
+      return next(new NotFoundError('Workspace not found'));
+    }
+
+    if (!userId) {
+      return next(new Error('Please add user'));
+    }
+
+    await workspace.addUserAsEditor(userId);
+    res.status(200).json({ message: 'User added as editor' });
+  } catch (err) {
+    next(new Error((err as Error).message));
+  }
+};
+
+export const addViewerToWorkspace = async (
+  req: RequestAuth,
+  res: Response,
+  next: NextFunction
+) => {
+  const { workspaceId, userId } = req.body;
+
+  try {
+    const workspace = await Workspace.findById(workspaceId);
+    if (!workspace) {
+      return next(new NotFoundError('Workspace not found'));
+    }
+
+    if (!userId) {
+      return next(new Error('Missing userId'));
+    }
+
+    await workspace.addUserAsViewer(userId);
+    res.status(200).json({ message: 'User added as viewer' });
+  } catch (err) {
+    next(new Error((err as Error).message));
+  }
+};

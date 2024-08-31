@@ -1,13 +1,19 @@
 import mongoose from 'mongoose';
 
-interface Document extends mongoose.Document {
+export interface DocumentInterface extends mongoose.Document {
   documentName: string;
   workspace: mongoose.Types.ObjectId;
   user: string;
   deleted: boolean;
-  deletedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
+  permissions: {
+    userId: mongoose.Types.ObjectId;
+    permission: string; // e.g., 'read', 'write', 'admin'
+  }[];
+  filePath: string;
+  originalFileName: string;
+  fileSize: number;
 }
 
 const documentSchema = new mongoose.Schema({
@@ -17,7 +23,6 @@ const documentSchema = new mongoose.Schema({
   },
   user: {
     type: String,
-    ref: 'Users',
     required: true,
   },
   deleted: {
@@ -49,6 +54,19 @@ const documentSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
+  permissions: [
+    {
+      userId: {
+        type: String,
+        required: true,
+      },
+      permission: {
+        type: String,
+        enum: ['read', 'write', 'admin'],
+        required: true,
+      },
+    },
+  ],
 });
 
 documentSchema.methods.updateDocumentName = async function (newName: string) {
@@ -64,6 +82,6 @@ documentSchema.methods.linkToWorkspace = async function (
   return this.save();
 };
 
-const Document = mongoose.model('Documents', documentSchema);
+const DocumentModel = mongoose.model('Documents', documentSchema);
 
-export default Document;
+export default DocumentModel;

@@ -19,9 +19,9 @@ router.post('/login', loginUser);
 
 router.use(auth);
 
-router.get('/:username', getUserData);
+router.get('/:email', getUserData);
 
-router.delete('/:username', deleteUser);
+router.delete('/:email', deleteUser);
 
 router.patch('/:id', updateUser);
 
