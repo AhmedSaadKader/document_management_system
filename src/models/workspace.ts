@@ -3,18 +3,15 @@ import mongoose from 'mongoose';
 export interface WorkspaceInterface extends mongoose.Document {
   workspaceName: string;
   description: string;
-  user: string;
+  userId: string;
+  userEmail: string;
   documents: mongoose.Types.ObjectId[];
   createdAt: Date;
   updatedAt: Date;
-  permissions: {
-    userId: mongoose.Types.ObjectId;
-    permission: string; // e.g., 'read', 'write'
-  }[];
   addDocument(documentId: mongoose.Types.ObjectId): Promise<WorkspaceInterface>;
   removeDocument(documentId: string): Promise<WorkspaceInterface>;
-  addUserAsEditor(userId: string): Promise<WorkspaceInterface>;
-  addUserAsViewer(userId: string): Promise<WorkspaceInterface>;
+  addUserAsEditor(email: string): Promise<WorkspaceInterface>;
+  addUserAsViewer(email: string): Promise<WorkspaceInterface>;
 }
 
 const workspaceSchema = new mongoose.Schema({
@@ -26,6 +23,10 @@ const workspaceSchema = new mongoose.Schema({
     type: String,
   },
   userId: {
+    type: String,
+    required: true,
+  },
+  userEmail: {
     type: String,
     required: true,
   },
@@ -43,19 +44,6 @@ const workspaceSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
-  permissions: [
-    {
-      userId: {
-        type: String,
-        required: true,
-      },
-      permission: {
-        type: String,
-        enum: ['read', 'write'],
-        required: true,
-      },
-    },
-  ],
 });
 
 workspaceSchema.methods.removeDocument = async function (documentId: string) {
@@ -72,18 +60,22 @@ workspaceSchema.methods.addDocument = async function (
   return this.save();
 };
 
-workspaceSchema.methods.addUserAsEditor = async function (userId: string) {
-  this.permissions.push({ userId, permission: 'write' });
+workspaceSchema.methods.addUserAsEditor = async function (userEmail: string) {
+  this.permissions.push({ userEmail, permission: 'editor' });
   return this.save();
 };
 
-workspaceSchema.methods.addUserAsViewer = async function (userId: string) {
-  this.permissions.push({ userId, permission: 'read' });
+workspaceSchema.methods.addUserAsViewer = async function (userEmail: string) {
+  this.permissions.push({ userEmail, permission: 'viewer' });
   return this.save();
 };
 
-workspaceSchema.statics.findByUser = async function (userId: string) {
+workspaceSchema.statics.findByUserId = async function (userId: string) {
   return this.find({ user: userId });
+};
+
+workspaceSchema.statics.findByUserEmail = async function (userEmail: string) {
+  return this.find({ user: userEmail });
 };
 
 const Workspace = mongoose.model<WorkspaceInterface>(

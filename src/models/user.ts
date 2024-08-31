@@ -118,11 +118,10 @@ export class UserModel {
    * @throws UserCreationError if the user could not be created.
    */
   async create(userData: UserData): Promise<User> {
-    const { national_id, first_name, last_name, email, password, role } =
-      userData;
+    const { national_id, first_name, last_name, email, password } = userData;
     const sql = `INSERT INTO 
-      users (national_id, first_name, last_name, email, password_digest, role)
-      VALUES  ($1, $2, $3, $4, $5, $6) RETURNING *`;
+      users (national_id, first_name, last_name, email, password_digest)
+      VALUES  ($1, $2, $3, $4, $5) RETURNING *`;
     const password_digest = await hashPassword(password);
     const result = await connectionSQLResult(sql, [
       national_id,
@@ -130,7 +129,6 @@ export class UserModel {
       last_name,
       email,
       password_digest,
-      role,
     ]);
     if (result.rows.length == 0) throw new UserCreationError(email);
     return result.rows[0];

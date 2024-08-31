@@ -58,11 +58,18 @@ export const registerUser = async (
       password,
       role,
     });
-    const token = createJWT(newUser.national_id, newUser.email);
+    const token = createJWT(
+      newUser.national_id,
+      newUser.email,
+      newUser.first_name,
+      newUser.last_name
+    );
     res.json({
       token,
       email: newUser.email,
       national_id: newUser.national_id,
+      first_name: newUser.first_name,
+      last_name: newUser.last_name,
     });
   } catch (error) {
     next(error);
@@ -80,11 +87,18 @@ export const loginUser = async (
   }
   try {
     const createdUser = await user.authenticateUser(email, password);
-    const token = createJWT(createdUser.national_id, createdUser.email);
+    const token = createJWT(
+      createdUser.national_id,
+      createdUser.email,
+      createdUser.first_name,
+      createdUser.last_name
+    );
     res.json({
       token,
       email: createdUser.email,
       national_id: createdUser.national_id,
+      first_name: createdUser.first_name,
+      last_name: createdUser.last_name,
     });
   } catch (error) {
     next(error);
