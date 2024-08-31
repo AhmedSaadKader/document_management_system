@@ -3,12 +3,13 @@ import mongoose from 'mongoose';
 export interface DocumentInterface extends mongoose.Document {
   documentName: string;
   workspace: mongoose.Types.ObjectId;
-  user: string;
+  userId: string;
+  userEmail: string;
   deleted: boolean;
   createdAt: Date;
   updatedAt: Date;
   permissions: {
-    userId: mongoose.Types.ObjectId;
+    userEmail: mongoose.Types.ObjectId;
     permission: string; // e.g., 'read', 'write', 'admin'
   }[];
   filePath: string;
@@ -21,7 +22,11 @@ const documentSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  user: {
+  userId: {
+    type: String,
+    required: true,
+  },
+  userEmail: {
     type: String,
     required: true,
   },
@@ -56,7 +61,7 @@ const documentSchema = new mongoose.Schema({
   },
   permissions: [
     {
-      userId: {
+      userEmail: {
         type: String,
         required: true,
       },

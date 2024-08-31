@@ -18,5 +18,6 @@ export interface RequestAuth extends Request {
     workspaceName?: string;
     description?: string;
     userId?: string;
+    permission?: string;
   };
 }

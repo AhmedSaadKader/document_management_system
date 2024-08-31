@@ -7,6 +7,7 @@ import {
   NotFoundError,
 } from '../middleware/error_handler';
 import fs from 'fs';
+import Permission from '../models/permissions';
 
 export const getAllWorkspaces = async (
   req: RequestAuth,
@@ -15,7 +16,7 @@ export const getAllWorkspaces = async (
 ) => {
   try {
     const workspaces = await Workspace.find({
-      user: req.user!.national_id,
+      userId: req.user!.national_id,
     }).populate({
       path: 'documents',
       match: { deleted: false },
@@ -70,7 +71,8 @@ export const createWorkspace = async (
   try {
     const workspace = new Workspace({
       workspaceName,
-      user: req.user!.national_id,
+      userId: req.user!.national_id,
+      userEmail: req.user!.national_id,
     });
     await workspace.save();
 
@@ -95,7 +97,7 @@ export const updateWorkspace = async (
       return next(new NotFoundError('Workspace not found'));
     }
 
-    if (workspace.user !== req.user!.national_id) {
+    if (workspace.userId !== req.user!.national_id) {
       return res
         .status(403)
         .json({ message: 'Not authorized to update this workspace' });
@@ -154,7 +156,8 @@ export const addDocumentToWorkspace = async (
 
     const newDocument = new Document({
       documentName: documentName || file.originalname,
-      user: req.user!.national_id,
+      userId: req.user!.national_id,
+      userEmail: req.user!.email,
       filePath: file.path,
       originalFileName: file.originalname,
       fileSize: file.size,
@@ -262,12 +265,14 @@ export const viewDocumentFromWorkspace = async (
   }
 };
 
-export const addEditorToWorkspace = async (
+export const shareWorkspace = async (
   req: RequestAuth,
   res: Response,
   next: NextFunction
 ) => {
-  const { workspaceId, userId } = req.body;
+  const { email, permission } = req.body;
+  const { workspaceId } = req.params;
+  const userId = req.user!.national_id;
 
   try {
     const workspace = await Workspace.findById(workspaceId);
@@ -276,35 +281,39 @@ export const addEditorToWorkspace = async (
     }
 
     if (!userId) {
-      return next(new Error('Please add user'));
+      return next(new Error('User not authenticated'));
     }
 
-    await workspace.addUserAsEditor(userId);
-    res.status(200).json({ message: 'User added as editor' });
-  } catch (err) {
-    next(new Error((err as Error).message));
-  }
-};
-
-export const addViewerToWorkspace = async (
-  req: RequestAuth,
-  res: Response,
-  next: NextFunction
-) => {
-  const { workspaceId, userId } = req.body;
-
-  try {
-    const workspace = await Workspace.findById(workspaceId);
-    if (!workspace) {
-      return next(new NotFoundError('Workspace not found'));
+    if (!email) {
+      return next(new Error('Please provide an email'));
     }
 
-    if (!userId) {
-      return next(new Error('Missing userId'));
+    if (permission !== 'viewer' && permission !== 'editor') {
+      return next(new Error('Please choose a correct permission'));
     }
 
-    await workspace.addUserAsViewer(userId);
-    res.status(200).json({ message: 'User added as viewer' });
+    // Check if the permission already exists
+    const existingPermission = await Permission.findOne({
+      userEmail: email,
+      workspaceId: workspaceId,
+    });
+
+    if (existingPermission) {
+      return res.status(400).json({
+        message: 'This user already has permissions for this workspace',
+      });
+    }
+
+    // Create a new permission document
+    const newPermission = new Permission({
+      userEmail: email,
+      workspaceId: workspace._id,
+      permission,
+    });
+
+    await newPermission.save();
+
+    res.status(200).json({ message: `User added as ${permission}` });
   } catch (err) {
     next(new Error((err as Error).message));
   }

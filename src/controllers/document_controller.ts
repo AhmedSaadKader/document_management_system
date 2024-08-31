@@ -24,7 +24,7 @@ export const getAllDocuments = async (
 
     // Fetch documents belonging to the authenticated user
     const documents = await DocumentModel.find({
-      user: userId,
+      userId: userId,
       deleted: false,
     });
 
@@ -63,7 +63,8 @@ export const createDocument = async (
     // Create and save the new document
     const document = new DocumentModel({
       documentName,
-      user: req.user!.national_id,
+      userId: req.user!.national_id,
+      userEmail: req.user!.email,
       workspace,
     });
     await document.save();
@@ -90,7 +91,7 @@ export const getDocumentDetails = async (
       return next(new NotFoundError('Document not found'));
     }
 
-    if (document.user !== req.user!.national_id) {
+    if (document.userId !== req.user!.national_id) {
       return res
         .status(403)
         .json({ message: 'Not authorized to view this workspace' });
@@ -168,7 +169,10 @@ export const recycleBin = async (
   next: NextFunction
 ) => {
   try {
-    const documents = await DocumentModel.find({ deleted: { $eq: true } });
+    const documents = await DocumentModel.find({
+      userId: req.user!.national_id,
+      deleted: true,
+    });
     res.status(200).json(documents);
   } catch (err) {
     next(new Error((err as Error).message));
@@ -246,7 +250,7 @@ export const previewDocument = async (
     }
 
     // Check if the authenticated user is allowed to preview the document
-    if (document.user.toString() !== req.user!.national_id) {
+    if (document.userId.toString() !== req.user!.national_id) {
       return res.status(403).json({ message: 'Access denied' });
     }
 
@@ -281,7 +285,7 @@ export const filterDocuments = async (
     const userId = req.user!.national_id;
     const { search, sortBy, order = 'asc' } = req.query;
 
-    let query = DocumentModel.find({ user: userId, deleted: false });
+    let query = DocumentModel.find({ userId: userId, deleted: false });
 
     // Search by document name
     if (search) {
