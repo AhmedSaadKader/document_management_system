@@ -10,6 +10,7 @@ import {
   previewDocument,
   filterDocuments,
   getDocumentDetails,
+  downloadDocument,
 } from '../controllers/document_controller';
 import auth from '../middleware/auth';
 import { uploadFileMiddleware } from '../utils/file_upload_utils';
@@ -43,6 +44,9 @@ router.delete('/:documentId/delete', permanentlyDeleteDocument);
 
 // Route to preview a document
 router.get('/:documentId/preview', previewDocument);
+
+// Route to download a document
+router.get('/:documentId/download', downloadDocument);
 
 // Route to upload a document
 router.post('/upload', uploadFileMiddleware, uploadDocument);

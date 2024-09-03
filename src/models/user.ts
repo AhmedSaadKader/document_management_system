@@ -24,9 +24,6 @@ export type UserBase = {
 
   /** User's email address */
   email: string;
-
-  /** User's role */
-  role: string;
 };
 
 /**

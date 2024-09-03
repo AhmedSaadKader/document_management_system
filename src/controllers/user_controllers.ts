@@ -41,9 +41,11 @@ export const registerUser = async (
   res: Response,
   next: NextFunction
 ): Promise<void> => {
-  const { national_id, first_name, last_name, email, password, role } =
-    req.body;
+  const { national_id, first_name, last_name, email, password } = req.body;
   try {
+    if (!national_id || !first_name || !last_name || !email || !password) {
+      next(new Error('Please provide missing values'));
+    }
     if (await user.emailExists(email)) {
       res.status(409).json({
         error: 'Email already exists',
@@ -56,7 +58,6 @@ export const registerUser = async (
       last_name,
       email,
       password,
-      role,
     });
     const token = createJWT(
       newUser.national_id,

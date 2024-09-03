@@ -85,7 +85,6 @@ export const getDocumentDetails = async (
 ) => {
   try {
     const { documentId } = req.params;
-    console.log(documentId);
     const document = await DocumentModel.findById(documentId);
     if (!document) {
       return next(new NotFoundError('Document not found'));
@@ -271,6 +270,44 @@ export const previewDocument = async (
       // Send the Base64 string as a response
       res.json({ base64: base64Data });
     });
+  } catch (err) {
+    next(new Error((err as Error).message));
+  }
+};
+
+export const downloadDocument = async (
+  req: RequestAuth,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { documentId } = req.params;
+
+    // Find the document by its ID
+    const document = await DocumentModel.findById(documentId);
+    if (!document) {
+      return res.status(404).json({ message: 'Document not found' });
+    }
+
+    // Get the file path
+    const filePath = document.filePath;
+
+    // Check if the file exists
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ message: 'File not found on server' });
+    }
+
+    // Set the correct headers for downloading the file
+    const headers = {
+      'Content-Disposition': `attachment; filename=${document.originalFileName}`,
+      'Content-Type': 'application/pdf',
+    };
+
+    res.writeHead(200, headers);
+
+    // Stream the file to the response
+    const fileStream = fs.createReadStream(filePath);
+    fileStream.pipe(res);
   } catch (err) {
     next(new Error((err as Error).message));
   }
