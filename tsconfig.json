@@ -1,18 +1,18 @@
 {
   "compilerOptions": {
-      "target": "es2020",
-      "module": "commonjs",
-      "lib": ["ES2020", "DOM"],
-      "outDir": "./dist",
-      "strict": true,
-      "noImplicitAny": true,
-      "typeRoots": ["./types"],
-      "moduleResolution": "node",
-      "sourceMap": true,
-      "strictFunctionTypes": true,
-      "strictNullChecks": true,
-      "noImplicitThis": true,
-      "esModuleInterop": true
+    "target": "es2020",
+    "module": "commonjs",
+    "lib": ["ES2020", "DOM"],
+    "outDir": "./dist",
+    "strict": true,
+    "noImplicitAny": true,
+    "typeRoots": ["./types"],
+    "moduleResolution": "node",
+    "sourceMap": true,
+    "strictFunctionTypes": true,
+    "strictNullChecks": true,
+    "noImplicitThis": true,
+    "esModuleInterop": true
   },
   "exclude": ["node_modules", "spec"]
 }

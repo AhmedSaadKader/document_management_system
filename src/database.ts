@@ -21,7 +21,7 @@ const {
 // Default configuration is empty and will be overwritten based on environment
 export let sqlClient = new Pool({
   host: '',
-  port: 5433,
+  port: 5432,
   database: '',
   user: '',
   password: '',
@@ -35,7 +35,7 @@ export const mongoClient = mongoose.connect(MONGODB_CONNECTION as string);
 if (ENV == 'dev') {
   sqlClient = new Pool({
     host: POSTGRES_HOST,
-    port: Number(POSTGRES_PORT) | 5433,
+    port: Number(POSTGRES_PORT) | 5432,
     database: POSTGRES_DB,
     user: POSTGRES_USER,
     password: POSTGRES_PASSWORD,

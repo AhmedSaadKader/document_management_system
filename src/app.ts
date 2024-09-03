@@ -4,6 +4,7 @@ import cors from 'cors';
 import userRouter from './routes/user_routes';
 import documentRouter from './routes/document_routes';
 import workspaceRouter from './routes/workspace_routes';
+import permissionRouter from './routes/permissions_routes';
 import globalErrorHandler from './middleware/global_error_handler';
 
 // Load environment variables from a .env file into process.env
@@ -41,6 +42,8 @@ app.use(apiVersion + '/users', userRouter);
 app.use(apiVersion + '/documents', documentRouter);
 
 app.use(apiVersion + '/workspaces', workspaceRouter);
+
+app.use(apiVersion + '/permissions', permissionRouter);
 
 // Register the global error handler at the end
 app.use(globalErrorHandler);
