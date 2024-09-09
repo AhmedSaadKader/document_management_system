@@ -1,13 +1,12 @@
 import { Response, NextFunction } from 'express';
 import { RequestAuth } from '../../types';
-import Workspace from '../models/workspace';
+import Workspace, { Permission } from '../models/workspace';
 import Document from '../models/document';
 import {
   DatabaseConnectionError,
   NotFoundError,
 } from '../middleware/error_handler';
 import fs from 'fs';
-import Permission from '../models/permissions';
 
 export const getAllWorkspaces = async (
   req: RequestAuth,
@@ -34,7 +33,8 @@ export const getWorkspaceById = async (
   try {
     const { workspaceId } = req.params;
     const { search, sortBy, order = 'asc' } = req.query;
-
+    const userId = req.user!.national_id;
+    const userEmail = req.user!.email;
     const sortOrder = order === 'desc' ? -1 : 1;
 
     // Find the workspace by ID
@@ -55,7 +55,18 @@ export const getWorkspaceById = async (
       return res.status(404).json({ message: 'Workspace not found' });
     }
 
-    res.json(workspace);
+    let role: string | null = 'viewer';
+
+    if (userId == workspace.userId) {
+      role = 'owner';
+    }
+
+    // Check if the user is the owner, editor, or viewer
+    if (userEmail) {
+      role = workspace.isUserEditorOrViewer(userEmail);
+    }
+
+    res.json({ workspace, role });
   } catch (err) {
     next(new DatabaseConnectionError((err as Error).message));
   }
@@ -72,7 +83,7 @@ export const createWorkspace = async (
     const workspace = new Workspace({
       workspaceName,
       userId: req.user!.national_id,
-      userEmail: req.user!.national_id,
+      userEmail: req.user!.email,
     });
     await workspace.save();
 
@@ -273,6 +284,7 @@ export const shareWorkspace = async (
   const { email, permission } = req.body;
   const { workspaceId } = req.params;
   const userId = req.user!.national_id;
+  const userEmail = req.user!.email;
 
   try {
     const workspace = await Workspace.findById(workspaceId);
@@ -280,7 +292,7 @@ export const shareWorkspace = async (
       return next(new NotFoundError('Workspace not found'));
     }
 
-    if (!userId) {
+    if (!userId || !userEmail) {
       return next(new Error('User not authenticated'));
     }
 
@@ -289,14 +301,21 @@ export const shareWorkspace = async (
     }
 
     if (permission !== 'viewer' && permission !== 'editor') {
-      return next(new Error('Please choose a correct permission'));
+      return next(new Error('Please choose a valid permission'));
     }
 
-    // Check if the permission already exists
-    const existingPermission = await Permission.findOne({
-      userEmail: email,
-      workspaceId: workspaceId,
-    });
+    // Check if the current user is either the owner or an editor of the workspace
+    const userRole = workspace.isUserEditorOrViewer(userEmail);
+    if (userRole !== 'editor' && userId !== workspace.userId) {
+      return res.status(403).json({
+        message: 'Only the owner or editors can share this workspace',
+      });
+    }
+
+    // Check if the user already has permissions for this workspace
+    const existingPermission = workspace.permissions.find(
+      (perm: Permission) => perm.userEmail === email
+    );
 
     if (existingPermission) {
       return res.status(400).json({
@@ -304,17 +323,58 @@ export const shareWorkspace = async (
       });
     }
 
-    // Create a new permission document
-    const newPermission = new Permission({
-      userEmail: email,
-      workspaceId: workspace._id,
-      permission,
-    });
-
-    await newPermission.save();
+    // Add new permission
+    if (permission === 'editor') {
+      await workspace.addUserAsEditor(email);
+    } else {
+      await workspace.addUserAsViewer(email);
+    }
 
     res.status(200).json({ message: `User added as ${permission}` });
   } catch (err) {
     next(new Error((err as Error).message));
+  }
+};
+
+export const getSharedDocuments = async (
+  req: RequestAuth,
+  res: Response,
+  next: NextFunction
+) => {
+  const userEmail = req.user?.email;
+
+  try {
+    if (!userEmail) {
+      return res.status(400).json({ message: 'User email is required' });
+    }
+
+    // Find all workspaces where the user is either a viewer or editor in the permissions array
+    const sharedWorkspaces = await Workspace.find({
+      'permissions.userEmail': userEmail,
+    });
+
+    res.status(200).json(sharedWorkspaces);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Get recent workspaces for the logged-in user
+export const getRecentWorkspaces = async (
+  req: RequestAuth,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const userId = req.user!.national_id;
+
+    // Fetch the most recent workspaces for the user, ordered by creation date
+    const recentWorkspaces = await Workspace.find({ userId })
+      .sort({ createdAt: -1 })
+      .limit(5); // Adjust the number as needed
+
+    res.status(200).json(recentWorkspaces);
+  } catch (error) {
+    next(error);
   }
 };
