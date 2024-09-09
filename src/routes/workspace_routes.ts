@@ -10,6 +10,8 @@ import {
   downloadDocumentFromWorkspace,
   viewDocumentFromWorkspace,
   shareWorkspace,
+  getSharedDocuments,
+  getRecentWorkspaces,
 } from '../controllers/workspace_controller';
 import auth from '../middleware/auth';
 import { uploadFileMiddleware } from '../utils/file_upload_utils';
@@ -25,6 +27,11 @@ router.get('/', getAllWorkspaces);
 
 // Route to create a new workspace
 router.post('/', createWorkspace);
+
+router.get('/shared-workspaces', getSharedDocuments);
+
+// Get recent workspaces for the logged-in user
+router.get('/recent', getRecentWorkspaces);
 
 // Route to get a specific workspace by ID
 router.get('/:workspaceId', getWorkspaceById);
