@@ -49,7 +49,7 @@ app.use(apiVersion + '/favorites', favoriteRoutes);
 app.use(globalErrorHandler);
 
 // Start the server and listen for incoming requests on the specified port
-app.listen(port, () => {
+export const server = app.listen(port, () => {
   console.log(`Starting app on: ${address}`);
 });
 

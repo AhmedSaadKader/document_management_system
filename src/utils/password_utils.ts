@@ -47,8 +47,5 @@ export const comparePassword = (
   password: string,
   hashedPassword: string
 ): boolean => {
-  return bcrypt.compareSync(
-    password + BCRYPT_PASSWORD, // Concatenate plaintext password with BCRYPT_PASSWORD for comparison
-    hashedPassword // The hashed password to compare with
-  );
+  return bcrypt.compareSync(password + BCRYPT_PASSWORD, hashedPassword);
 };

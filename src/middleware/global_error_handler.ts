@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import {
   DatabaseConnectionError,
   InvalidPasswordError,
@@ -10,7 +10,12 @@ import {
   UserUpdateError,
 } from './error_handler';
 
-const globalErrorHandler = (err: Error, req: Request, res: Response) => {
+const globalErrorHandler = (
+  err: Error,
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   if (err instanceof UserNotFoundError) {
     return res.status(404).json({ error: err.message });
   }
@@ -20,6 +25,7 @@ const globalErrorHandler = (err: Error, req: Request, res: Response) => {
   }
 
   if (err instanceof InvalidPasswordError) {
+    console.log('invalid password error');
     return res.status(401).json({ error: err.message });
   }
 
@@ -45,6 +51,8 @@ const globalErrorHandler = (err: Error, req: Request, res: Response) => {
 
   // Handle any other errors that were not caught explicitly
   return res.status(500).json({ error: err.message });
+
+  next();
 };
 
 export default globalErrorHandler;

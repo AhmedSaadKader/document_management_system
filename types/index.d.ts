@@ -19,5 +19,7 @@ export interface RequestAuth extends Request {
     description?: string;
     userId?: string;
     permission?: string;
+    tags: string[];
+    permissions: string;
   };
 }
