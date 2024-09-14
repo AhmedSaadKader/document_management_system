@@ -82,8 +82,9 @@ export class UserModel {
   async authenticateUser(email: string, password: string): Promise<User> {
     const user = await this.emailExists(email);
     if (!user) throw new UserNotFoundError(email);
-    if (!comparePassword(password, user.password_digest))
+    if (!comparePassword(password, user.password_digest)) {
       throw new InvalidPasswordError();
+    }
     return user;
   }
 
@@ -103,7 +104,7 @@ export class UserModel {
   async findById(email: string): Promise<User[]> {
     const sql = 'SELECT * FROM users WHERE email=($1)';
     const result = await connectionSQLResult(sql, [email]);
-    if (!result.rows.length) throw new NoUsersError();
+    if (!result.rows.length) throw new UserNotFoundError(email);
     return result.rows;
   }
 
@@ -141,7 +142,7 @@ export class UserModel {
   async delete(email: string): Promise<boolean> {
     const sql = 'DELETE FROM users WHERE email=($1)';
     const result = await connectionSQLResult(sql, [email]);
-    if (result.rows.length === 0) throw new UserNotFoundError(email);
+    if (result.rowCount === 0) throw new UserNotFoundError(email);
     return true;
   }
 

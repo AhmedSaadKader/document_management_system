@@ -10,11 +10,19 @@ export interface DocumentInterface extends mongoose.Document {
   updatedAt: Date;
   permissions: {
     userEmail: mongoose.Types.ObjectId;
-    permission: string; // e.g., 'read', 'write', 'admin'
+    permission: string;
   }[];
   filePath: string;
+  fileType: string;
   originalFileName: string;
   fileSize: number;
+  tags: string[];
+  version: number;
+  versionHistory: {
+    version: number;
+    updatedAt: Date;
+    updatedBy: string;
+  }[];
 }
 
 const documentSchema = new mongoose.Schema({
@@ -59,6 +67,33 @@ const documentSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
+  fileType: {
+    type: String,
+    required: true,
+  },
+  tags: {
+    type: [String],
+  },
+  version: {
+    type: Number,
+    default: 1,
+  },
+  versionHistory: [
+    {
+      version: {
+        type: Number,
+        required: true,
+      },
+      updatedAt: {
+        type: Date,
+        default: Date.now,
+      },
+      updatedBy: {
+        type: String,
+        required: true,
+      },
+    },
+  ],
   permissions: [
     {
       userEmail: {

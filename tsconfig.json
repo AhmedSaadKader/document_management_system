@@ -6,13 +6,19 @@
     "outDir": "./dist",
     "strict": true,
     "noImplicitAny": true,
-    "typeRoots": ["./types"],
+    "typeRoots": ["./types", "node_modules"],
     "moduleResolution": "node",
     "sourceMap": true,
     "strictFunctionTypes": true,
     "strictNullChecks": true,
     "noImplicitThis": true,
+    "types": ["jest"],
     "esModuleInterop": true
   },
-  "exclude": ["node_modules", "spec"]
+  "include": ["src/**/*.ts"],
+  "ts-node": {
+    "transpileOnly": true,
+    "files": true
+  },
+  "exclude": ["node_modules", "./coverage", "./dist"]
 }

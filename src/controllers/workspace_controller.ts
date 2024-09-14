@@ -7,6 +7,7 @@ import {
   NotFoundError,
 } from '../middleware/error_handler';
 import fs from 'fs';
+import path from 'path';
 
 export const getAllWorkspaces = async (
   req: RequestAuth,
@@ -152,33 +153,60 @@ export const addDocumentToWorkspace = async (
   next: NextFunction
 ) => {
   try {
-    const { file } = req;
+    const { file } = req; // Assuming you're using Multer for file uploads
     const { workspaceId } = req.params;
-    const { documentName } = req.body;
-    const workspace = await Workspace.findById(workspaceId);
+    const { documentName, tags, permissions } = req.body;
 
+    // Check if the workspace exists
+    const workspace = await Workspace.findById(workspaceId);
     if (!workspace) {
       return res.status(404).json({ message: 'Workspace not found' });
     }
 
+    // Check if a file is uploaded
     if (!file) {
       return res.status(400).json({ message: 'No file uploaded' });
     }
 
+    // Prepare document permissions (default uploader to admin if not provided)
+    const documentPermissions = permissions || [
+      { userEmail: req.user!.email, permission: 'admin' },
+    ];
+
+    // Determine the document type and file type from the uploaded file
+    const documentType = path.extname(file.originalname).slice(1); // Get file extension as document type
+    const fileType = file.mimetype;
+
+    // Create a new document with the updated schema
     const newDocument = new Document({
-      documentName: documentName || file.originalname,
+      documentName: documentName || file.originalname, // Use file name if documentName is not provided
+      documentType, // Document type based on file extension
       userId: req.user!.national_id,
       userEmail: req.user!.email,
-      filePath: file.path,
-      originalFileName: file.originalname,
-      fileSize: file.size,
+      filePath: file.path, // Multer saves the file and gives the path
+      originalFileName: file.originalname, // Original file name
+      fileSize: file.size, // File size from Multer
+      fileType, // Mimetype from the uploaded file
       workspace: workspaceId,
+      permissions: documentPermissions,
+      tags: tags || [],
+      version: 1,
+      versionHistory: [
+        {
+          version: 1,
+          updatedAt: new Date(),
+          updatedBy: req.user!.email,
+        },
+      ],
     });
 
+    // Save the new document
     await newDocument.save();
 
+    // Add the document to the workspace
     workspace.addDocument(newDocument._id);
 
+    // Send the response with the created document
     res.status(201).json({
       message: 'Document uploaded successfully',
       document: newDocument,
@@ -236,7 +264,7 @@ export const downloadDocumentFromWorkspace = async (
     // Set the correct headers for downloading the file
     const headers = {
       'Content-Disposition': `attachment; filename=${document.originalFileName}`,
-      'Content-Type': 'application/pdf',
+      'Content-Type': `${document.fileType}`,
     };
 
     res.writeHead(200, headers);
@@ -336,7 +364,7 @@ export const shareWorkspace = async (
   }
 };
 
-export const getSharedDocuments = async (
+export const getSharedWorkspaces = async (
   req: RequestAuth,
   res: Response,
   next: NextFunction

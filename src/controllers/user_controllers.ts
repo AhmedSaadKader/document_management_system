@@ -4,6 +4,7 @@ import { createJWT } from '../utils/jwt_utils';
 import {
   UserAlreadyExistsError,
   UserLoginError,
+  UserNotFoundError,
 } from '../middleware/error_handler';
 import { RequestAuth } from '../../types';
 
@@ -30,6 +31,9 @@ export const getUserData = async (
   try {
     const { email } = req.params;
     const userData = await user.emailExists(email);
+    if (!userData) {
+      throw new UserNotFoundError(email);
+    }
     res.json(userData);
   } catch (err) {
     next(err);
@@ -83,10 +87,10 @@ export const loginUser = async (
   next: NextFunction
 ): Promise<void> => {
   const { email, password } = req.body;
-  if (!email || !password) {
-    throw new UserLoginError(email);
-  }
   try {
+    if (!email || !password) {
+      throw new UserLoginError(email);
+    }
     const createdUser = await user.authenticateUser(email, password);
     const token = createJWT(
       createdUser.national_id,
