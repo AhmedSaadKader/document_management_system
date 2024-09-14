@@ -101,13 +101,6 @@ export class UserModel {
     return result.rows;
   }
 
-  async findById(email: string): Promise<User[]> {
-    const sql = 'SELECT * FROM users WHERE email=($1)';
-    const result = await connectionSQLResult(sql, [email]);
-    if (!result.rows.length) throw new UserNotFoundError(email);
-    return result.rows;
-  }
-
   /**
    * Creates a new user in the database.
    *
@@ -120,7 +113,7 @@ export class UserModel {
     const sql = `INSERT INTO 
       users (national_id, first_name, last_name, email, password_digest)
       VALUES  ($1, $2, $3, $4, $5) RETURNING *`;
-    const password_digest = await hashPassword(password);
+    const password_digest = hashPassword(password);
     const result = await connectionSQLResult(sql, [
       national_id,
       first_name,
@@ -146,12 +139,42 @@ export class UserModel {
     return true;
   }
 
-  /**
-   * Updates a user's data in the database.
-   *
-   * @param email - The current email of the user to update.
-   * @returns The updated user object.
-   * @throws UserUpdateError if the email could not be updated.
-   */
-  async update() {}
+  // /**
+  //  * Updates a user's data in the database.
+  //  *
+  //  * @param email - The current email of the user to update.
+  //  * @param updatedData - An object containing the fields to update.
+  //  * @returns The updated user object.
+  //  * @throws UserUpdateError if the user could not be updated.
+  //  */
+  // async update(email: string, updatedData: Partial<UserBase>): Promise<User> {
+  //   const { first_name, last_name, national_id } = updatedData;
+
+  //   const sql = `
+  //     UPDATE users
+  //     SET
+  //       first_name = COALESCE($1, first_name),
+  //       last_name = COALESCE($2, last_name),
+  //       national_id = COALESCE($3, national_id),
+  //       updated_at = NOW()
+  //     WHERE email = $4
+  //     RETURNING *;
+  //   `;
+
+  //   // Execute the query with provided values, allowing partial updates
+  //   const result = await connectionSQLResult(sql, [
+  //     first_name ?? null,
+  //     last_name ?? null,
+  //     national_id ?? null,
+  //     email,
+  //   ]);
+
+  //   // If no rows are returned, the user was not found
+  //   if (result.rows.length === 0) {
+  //     throw new UserUpdateError(email);
+  //   }
+
+  //   // Return the updated user object
+  //   return result.rows[0];
+  // }
 }
