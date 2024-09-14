@@ -128,29 +128,39 @@ export const deleteUser = async (
   }
 };
 
-export const updateUser = async (
-  req: RequestAuth,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  try {
-    const email = req.user?.email as string;
-    const userId = req.params.id;
-    const getUser = await user.emailExists(email);
-    if (userId !== getUser?.national_id) {
-      throw new Error('Unauthorized to edit this user');
-    }
-    const newEmail = req.body.email;
-    if (!newEmail || newEmail === getUser?.email) {
-      throw new Error('Please provide a new email');
-    }
-    if (await user.emailExists(newEmail)) {
-      throw new Error('email already in use. Please provide a new email');
-    }
-    const updateUser = await user.update();
-    res.json(updateUser);
-  } catch (error) {
-    res.status(400);
-    next(error);
-  }
-};
+// export const updateUser = async (
+//   req: RequestAuth,
+//   res: Response,
+//   next: NextFunction
+// ): Promise<void> => {
+//   try {
+//     const { email } = req.params;
+//     const { first_name, last_name } = req.body;
+
+//     // Check if the authenticated user is trying to update their own data
+//     if (req.user?.email !== email) {
+//       res.status(403).json({ error: 'Unauthorized to update this user' });
+//     }
+
+//     // Fetch the existing user data
+//     const userData = await user.emailExists(email);
+//     if (!userData) {
+//       throw new UserNotFoundError(email);
+//     }
+
+//     // Update the user with the provided fields, but keep old values if not provided
+//     const updatedUser = await user.update(email, {
+//       first_name: first_name || userData.first_name,
+//       last_name: last_name || userData.last_name,
+//     });
+
+//     // Return the updated user data
+//     res.json({
+//       email: updatedUser.email,
+//       first_name: updatedUser.first_name,
+//       last_name: updatedUser.last_name,
+//     });
+//   } catch (error) {
+//     next(error);
+//   }
+// };

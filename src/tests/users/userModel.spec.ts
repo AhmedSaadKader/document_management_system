@@ -111,8 +111,8 @@ describe('User Model Unit Tests', () => {
       password: 'password123',
     });
 
-    const foundUser = await userModel.findById('john.doe@example.com');
-    expect(foundUser[0].email).toBe('john.doe@example.com');
+    const foundUser = await userModel.emailExists('john.doe@example.com');
+    expect(foundUser!.email).toBe('john.doe@example.com');
   });
 
   // 6. Test for deleting a user
@@ -125,13 +125,13 @@ describe('User Model Unit Tests', () => {
       password: 'password123',
     });
 
-    const user = await userModel.findById('john.doe@example.com');
-    expect(user[0].email).toBe('john.doe@example.com');
+    const user = await userModel.emailExists('john.doe@example.com');
+    expect(user!.email).toBe('john.doe@example.com');
 
     const result = await userModel.delete('john.doe@example.com');
     expect(result).toBe(true);
 
-    await expect(userModel.findById('john.doe@example.com')).rejects.toThrow(
+    await expect(userModel.delete('john.doe@example.com')).rejects.toThrow(
       UserNotFoundError
     );
   });
@@ -139,11 +139,5 @@ describe('User Model Unit Tests', () => {
   // 7. Test for throwing an error when no users found
   it('should throw NoUsersError when no users exist', async () => {
     await expect(userModel.index()).rejects.toThrow(NoUsersError);
-  });
-
-  // 8. Test for updating a user (once implemented)
-  it("should update a user's details successfully", async () => {
-    // Assuming the update function is implemented
-    // Implement the update test logic here
   });
 });

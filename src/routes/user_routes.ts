@@ -4,7 +4,6 @@ import {
   getAllUsers,
   loginUser,
   registerUser,
-  updateUser,
   getUserData,
 } from '../controllers/user_controllers';
 import auth from '../middleware/auth';
@@ -23,6 +22,6 @@ router.get('/:email', getUserData);
 
 router.delete('/:email', deleteUser);
 
-router.patch('/:id', updateUser);
+// router.patch('/:id', updateUser);
 
 export default router;

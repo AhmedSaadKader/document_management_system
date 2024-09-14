@@ -21,5 +21,7 @@ export interface RequestAuth extends Request {
     permission?: string;
     tags: string[];
     permissions: string;
+    first_name: string;
+    last_name: string;
   };
 }
