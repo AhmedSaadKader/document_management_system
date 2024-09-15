@@ -3,7 +3,14 @@ import { Response, NextFunction } from 'express';
 import Favorite from '../models/favorite';
 import Workspace from '../models/workspace';
 
-// Add workspace to favorites
+/**
+ * Add workspace to the user's list of favorites.
+ *
+ * @param req - The authenticated request object containing the workspace ID in `req.params` and user information.
+ * @param res - The response object.
+ * @param next - The next middleware function for error handling.
+ * @returns A JSON response with the status and message.
+ */
 export const addFavorite = async (
   req: RequestAuth,
   res: Response,
@@ -39,7 +46,14 @@ export const addFavorite = async (
   }
 };
 
-// Remove workspace from favorites
+/**
+ * Remove a workspace from the user's list of favorites.
+ *
+ * @param req - The authenticated request object containing the workspace ID in `req.params` and user information.
+ * @param res - The response object.
+ * @param next - The next middleware function for error handling.
+ * @returns A JSON response with the status and message.
+ */
 export const removeFavorite = async (
   req: RequestAuth,
   res: Response,
@@ -65,7 +79,14 @@ export const removeFavorite = async (
   }
 };
 
-// Get list of favorited workspaces
+/**
+ * Get the list of workspaces favorited by the user.
+ *
+ * @param req - The authenticated request object containing the user's ID.
+ * @param res - The response object.
+ * @param next - The next middleware function for error handling.
+ * @returns A JSON response with the list of favorited workspaces.
+ */
 export const getFavorites = async (
   req: RequestAuth,
   res: Response,
@@ -83,6 +104,14 @@ export const getFavorites = async (
   }
 };
 
+/**
+ * Check if a specific workspace is favorited by the user.
+ *
+ * @param req - The authenticated request object containing the workspace ID in `req.params` and user information.
+ * @param res - The response object.
+ * @param next - The next middleware function for error handling.
+ * @returns A JSON response indicating whether the workspace is favorited.
+ */
 export const checkIfFavorited = async (
   req: RequestAuth,
   res: Response,

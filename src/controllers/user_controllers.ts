@@ -10,6 +10,14 @@ import { RequestAuth } from '../../types';
 
 const user = new UserModel();
 
+/**
+ * Fetch all users from the database.
+ *
+ * @param req - The request object.
+ * @param res - The response object, which will contain all users in JSON format.
+ * @param next - The next middleware function for handling errors.
+ * @returns A JSON response containing all users.
+ */
 export const getAllUsers = async (
   req: Request,
   res: Response,
@@ -23,6 +31,14 @@ export const getAllUsers = async (
   }
 };
 
+/**
+ * Retrieve user data based on the email provided in the request parameters.
+ *
+ * @param req - The request object containing the authenticated user's information and the email parameter.
+ * @param res - The response object, which will contain the user data in JSON format.
+ * @param next - The next middleware function for error handling.
+ * @returns A JSON response containing the user data.
+ */
 export const getUserData = async (
   req: RequestAuth,
   res: Response,
@@ -40,6 +56,14 @@ export const getUserData = async (
   }
 };
 
+/**
+ * Register a new user with the provided details in the request body.
+ *
+ * @param req - The request object containing user registration details.
+ * @param res - The response object, which will contain the created user data and a JWT token.
+ * @param next - The next middleware function for error handling.
+ * @returns A JSON response containing the JWT token and the new user details.
+ */
 export const registerUser = async (
   req: Request,
   res: Response,
@@ -81,6 +105,14 @@ export const registerUser = async (
   }
 };
 
+/**
+ * Log in a user by authenticating their email and password.
+ *
+ * @param req - The request object containing the email and password in the request body.
+ * @param res - The response object, which will contain the user data and a JWT token if authentication is successful.
+ * @param next - The next middleware function for error handling.
+ * @returns A JSON response containing the JWT token and user details.
+ */
 export const loginUser = async (
   req: Request,
   res: Response,
@@ -110,6 +142,14 @@ export const loginUser = async (
   }
 };
 
+/**
+ * Delete a user by their email, ensuring the authenticated user is authorized to delete their own account.
+ *
+ * @param req - The request object containing the authenticated user's information and email in the request parameters.
+ * @param res - The response object, which will contain the deleted user data in JSON format.
+ * @param next - The next middleware function for error handling.
+ * @returns A JSON response containing the deleted user data.
+ */
 export const deleteUser = async (
   req: RequestAuth,
   res: Response,
@@ -128,6 +168,19 @@ export const deleteUser = async (
   }
 };
 
+/*
+ * The following updateUser function is commented out. It can be uncommented for use in updating user details.
+ */
+
+/*
+// /**
+//  * Update a user's data, ensuring the authenticated user can only update their own data.
+//  *
+//  * @param req - The request object containing the authenticated user's information, email in the request parameters, and update data in the request body.
+//  * @param res - The response object, which will contain the updated user data in JSON format.
+//  * @param next - The next middleware function for error handling.
+//  * @returns A JSON response containing the updated user data.
+//  */
 // export const updateUser = async (
 //   req: RequestAuth,
 //   res: Response,
