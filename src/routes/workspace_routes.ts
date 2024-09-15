@@ -15,7 +15,10 @@ import {
 } from '../controllers/workspace_controller';
 import auth from '../middleware/auth';
 import { uploadFileMiddleware } from '../utils/file_upload_utils';
-import { filterDocuments } from '../controllers/document_controller';
+import {
+  filterDocuments,
+  s3UploadMiddleware,
+} from '../controllers/document_controller';
 
 const router = Router();
 
@@ -45,6 +48,7 @@ router.delete('/:workspaceId', deleteWorkspace);
 router.post(
   '/:workspaceId/documents',
   uploadFileMiddleware,
+  s3UploadMiddleware,
   addDocumentToWorkspace
 );
 

@@ -220,7 +220,7 @@ export const addDocumentToWorkspace = async (
       documentType,
       userId: req.user!.national_id,
       userEmail: req.user!.email,
-      filePath: file.path,
+      filePath: file.s3Key,
       originalFileName: file.originalname,
       fileSize: file.size,
       fileType,

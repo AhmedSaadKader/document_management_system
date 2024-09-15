@@ -6,7 +6,7 @@ import {
   DatabaseConnectionError,
   NotFoundError,
 } from '../middleware/error_handler';
-// import { createBucket, uploadFile } from '../utils/s3_utils';
+import { createBucket, readFile, uploadFile } from '../utils/s3_utils';
 import path from 'path';
 import fs from 'fs';
 
@@ -175,14 +175,14 @@ export const permanentlyDeleteDocument = async (
  * @param res - The response object.
  * @param next - The next middleware for error handling.
  * @returns A file stream of the requested document.
- */
-export const downloadDocument = async (
+ */ export const downloadDocument = async (
   req: RequestAuth,
   res: Response,
   next: NextFunction
 ) => {
   try {
     const { documentId } = req.params;
+    const bucketName = process.env.AWS_BUCKET_NAME as string;
 
     // Find the document by its ID
     const document = await DocumentModel.findById(documentId);
@@ -190,25 +190,26 @@ export const downloadDocument = async (
       return res.status(404).json({ message: 'Document not found' });
     }
 
-    // Get the file path
-    const filePath = document.filePath;
-
-    // Check if the file exists
-    if (!fs.existsSync(filePath)) {
-      return res.status(404).json({ message: 'File not found on server' });
-    }
+    // Get the file key (S3 file path)
+    const fileKey = document.filePath;
 
     // Set the correct headers for downloading the file
-    const headers = {
-      'Content-Disposition': `attachment; filename=${document.originalFileName}`,
-      'Content-Type': 'application/pdf',
-    };
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename=${document.originalFileName}`
+    );
+    res.setHeader('Content-Type', document.fileType);
 
-    res.writeHead(200, headers);
+    // Read file from S3 bucket
+    const s3ReadFile = await readFile(bucketName, fileKey);
 
-    // Stream the file to the response
-    const fileStream = fs.createReadStream(filePath);
-    fileStream.pipe(res);
+    if (s3ReadFile) {
+      // Stream the S3 file to the response
+      s3ReadFile.pipe(res);
+    } else {
+      // File not found in S3
+      return res.status(404).json({ message: 'File not found in S3' });
+    }
   } catch (err) {
     next(new Error((err as Error).message));
   }
@@ -268,6 +269,7 @@ export const previewDocument = async (
   next: NextFunction
 ) => {
   const { documentId } = req.params;
+  const bucketName = process.env.AWS_BUCKET_NAME as string;
 
   try {
     // Find the document by ID
@@ -282,22 +284,34 @@ export const previewDocument = async (
       return res.status(403).json({ message: 'Access denied' });
     }
 
-    // Get the file path from the document record
-    const filePath = path.resolve(__dirname, '..\\..', document.filePath);
+    // Get the file key (S3 path) from the document record
+    const fileKey = document.filePath;
 
-    // Read the file data
-    fs.readFile(filePath, (err, data) => {
-      if (err) {
-        return res
-          .status(500)
-          .json({ message: 'Failed to read the document file' });
-      }
+    // Read file from S3 bucket
+    const s3ReadFile = await readFile(bucketName, fileKey);
 
-      // Convert the file data to Base64
-      const base64Data = data.toString('base64');
+    if (!s3ReadFile) {
+      return res.status(404).json({ message: 'File not found in S3' });
+    }
+
+    // Collect the file data (Body) from S3 and convert it to a Base64 string
+    const chunks: unknown[] = [];
+    s3ReadFile.on('data', (chunk: unknown) => {
+      chunks.push(chunk);
+    });
+
+    s3ReadFile.on('end', () => {
+      const fileBuffer = Buffer.concat(chunks);
+      const base64Data = fileBuffer.toString('base64');
 
       // Send the Base64 string as a response
       res.json({ base64: base64Data });
+    });
+
+    s3ReadFile.on('error', (err) => {
+      return res
+        .status(500)
+        .json({ message: 'Failed to read document from S3' });
     });
   } catch (err) {
     next(new Error((err as Error).message));
@@ -305,45 +319,45 @@ export const previewDocument = async (
 };
 
 // Uncomment the following sections if S3 upload functionality is needed
-
-/*
-export const uploadDocument = async (
+export const s3UploadMiddleware = async (
   req: RequestAuth,
   res: Response,
   next: NextFunction
 ) => {
   if (!req.file) {
-    return res.status(400).send('No file uploaded.');
+    return res.status(400).json({ message: 'No file uploaded' });
   }
 
   try {
+    const file = req.file;
+    const filePath = file.path;
     const bucketName = process.env.AWS_BUCKET_NAME as string;
-    // Create the bucket if it doesn't exist
-    try {
-      await createBucket(bucketName);
-      console.log(`Bucket created or already exists: ${bucketName}`);
-    } catch (error) {
-      console.error(`Error creating bucket: ${error}`);
-      return res.status(500).send('Failed to create bucket.');
-    }
-    const fileKey = req.file.originalname;
-    const fileBody = req.file.buffer;
-    const contentType = req.file.mimetype;
+    const fileKey = `${Date.now()}_${file.originalname}`;
+    const contentType = file.mimetype;
+    const fileBody = fs.readFileSync(filePath);
+
+    // console.log(file);
+
+    // console.log(fileBody, contentType);
+
+    await createBucket(bucketName);
+    console.log(`Bucket created or already exists: ${bucketName}`);
 
     // Upload to S3
+    await uploadFile(bucketName, fileKey, fileBody, contentType);
 
-    const result = await uploadFile(bucketName, fileKey, fileBody, contentType);
+    // Attach S3 file info to request object
+    file.s3Key = fileKey;
+    file.s3Bucket = bucketName;
 
-    // Optionally delete the local file after uploading to S3
-    //  fs.unlinkSync(path.join(uploadDir, req.file.filename));
+    // Delete the file from disk after uploading to S3
+    fs.unlinkSync(filePath);
 
-    res.json({ message: 'File uploaded successfully', result });
+    next();
   } catch (error) {
-    console.error(`Error uploading file: ${error}`);
-    next(error);
+    next(new Error((error as Error).message));
   }
 };
-*/
 
 /*
 export const getAllDocuments = async (
