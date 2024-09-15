@@ -67,11 +67,13 @@ const globalErrorHandler = (
   if (err instanceof UserDeletionError) {
     res.status(500).json({ error: err.message });
   }
+  if (res.headersSent) {
+    return next(err);
+  }
+  console.error(err.stack);
 
   // Handle any other errors that were not caught explicitly
   res.status(500).json({ error: err.message });
-
-  next();
 };
 
 export default globalErrorHandler;
