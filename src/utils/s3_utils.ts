@@ -18,7 +18,7 @@ export const createBucket = async (bucketName: string) => {
     await s3Client.send(new CreateBucketCommand({ Bucket: bucketName }));
     console.log(`Bucket created: ${bucketName}`);
   } catch (error) {
-    console.error(`Error creating bucket: ${error}`);
+    console.error((error as Error).message);
   }
 };
 
@@ -30,16 +30,15 @@ export const uploadFile = async (
   contentType: string
 ) => {
   try {
-    const result = await s3Client.send(
-      new PutObjectCommand({
-        Bucket: bucketName,
-        Key: fileKey,
-        Body: fileBody,
-        ContentType: contentType,
-      })
-    );
+    const command = new PutObjectCommand({
+      Bucket: bucketName,
+      Key: fileKey,
+      Body: fileBody,
+      ContentType: contentType,
+    });
+    await s3Client.send(command);
     console.log(`File uploaded: ${fileKey}`);
-    return result;
+    // return command;
   } catch (error) {
     console.error(`Error uploading file: ${error}`);
     throw error;
@@ -64,9 +63,8 @@ export const readFile = async (bucketName: string, fileKey: string) => {
         Key: fileKey,
       })
     );
-    const data = await Body!.transformToString();
     console.log(`File read: ${fileKey}`);
-    return data;
+    return Body;
   } catch (error) {
     console.error(`Error reading file: ${error}`);
     throw error;

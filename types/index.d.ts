@@ -9,7 +9,7 @@ type UserPayload = {
 
 export interface RequestAuth extends Request {
   user?: UserPayload;
-  file?: Express.Multer.File;
+  file?: Express.Multer.File & { s3Key?: string; s3Bucket?: string };
   body: {
     email?: string;
     documentName?: string;
@@ -23,5 +23,6 @@ export interface RequestAuth extends Request {
     permissions: string;
     first_name: string;
     last_name: string;
+    file?: File;
   };
 }
