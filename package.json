@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node dist/app.js",
     "nodemon": "nodemon src/app.ts",
-    "build": "npx tsc",
+    "build": "tsc",
     "jasmine": "jest --coverage --detectOpenHandles",
     "test": "set ENV=test&& db-migrate db:drop document_management_system_test && db-migrate db:create document_management_system_test && db-migrate --env test up && npm run build && npm run jasmine && db-migrate db:drop document_management_system_test",
     "test:coverage": "npm run build && npx nyc --reporter=html --reporter=text --check-coverage npm run test",
