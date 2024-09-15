@@ -8,6 +8,7 @@ import {
 } from '../middleware/error_handler';
 import fs from 'fs';
 import path from 'path';
+import mongoose from 'mongoose';
 
 export const getAllWorkspaces = async (
   req: RequestAuth,
@@ -153,7 +154,7 @@ export const addDocumentToWorkspace = async (
   next: NextFunction
 ) => {
   try {
-    const { file } = req; // Assuming you're using Multer for file uploads
+    const { file } = req;
     const { workspaceId } = req.params;
     const { documentName, tags, permissions } = req.body;
 
@@ -174,19 +175,19 @@ export const addDocumentToWorkspace = async (
     ];
 
     // Determine the document type and file type from the uploaded file
-    const documentType = path.extname(file.originalname).slice(1); // Get file extension as document type
+    const documentType = path.extname(file.originalname).slice(1);
     const fileType = file.mimetype;
 
     // Create a new document with the updated schema
     const newDocument = new Document({
-      documentName: documentName || file.originalname, // Use file name if documentName is not provided
-      documentType, // Document type based on file extension
+      documentName: documentName || file.originalname,
+      documentType,
       userId: req.user!.national_id,
       userEmail: req.user!.email,
-      filePath: file.path, // Multer saves the file and gives the path
-      originalFileName: file.originalname, // Original file name
-      fileSize: file.size, // File size from Multer
-      fileType, // Mimetype from the uploaded file
+      filePath: file.path,
+      originalFileName: file.originalname,
+      fileSize: file.size,
+      fileType,
       workspace: workspaceId,
       permissions: documentPermissions,
       tags: tags || [],
@@ -204,7 +205,7 @@ export const addDocumentToWorkspace = async (
     await newDocument.save();
 
     // Add the document to the workspace
-    workspace.addDocument(newDocument._id);
+    workspace.addDocument(newDocument._id as mongoose.Types.ObjectId);
 
     // Send the response with the created document
     res.status(201).json({
@@ -239,43 +240,43 @@ export const deleteDocumentFromWorkspace = async (
   }
 };
 
-export const downloadDocumentFromWorkspace = async (
-  req: RequestAuth,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const { documentId } = req.params;
+// export const downloadDocumentFromWorkspace = async (
+//   req: RequestAuth,
+//   res: Response,
+//   next: NextFunction
+// ) => {
+//   try {
+//     const { documentId } = req.params;
 
-    // Find the document by its ID
-    const document = await Document.findById(documentId);
-    if (!document) {
-      return res.status(404).json({ message: 'Document not found' });
-    }
+//     // Find the document by its ID
+//     const document = await Document.findById(documentId);
+//     if (!document) {
+//       return res.status(404).json({ message: 'Document not found' });
+//     }
 
-    // Get the file path
-    const filePath = document.filePath;
+//     // Get the file path
+//     const filePath = document.filePath;
 
-    // Check if the file exists
-    if (!fs.existsSync(filePath)) {
-      return res.status(404).json({ message: 'File not found on server' });
-    }
+//     // Check if the file exists
+//     if (!fs.existsSync(filePath)) {
+//       return res.status(404).json({ message: 'File not found on server' });
+//     }
 
-    // Set the correct headers for downloading the file
-    const headers = {
-      'Content-Disposition': `attachment; filename=${document.originalFileName}`,
-      'Content-Type': `${document.fileType}`,
-    };
+//     // Set the correct headers for downloading the file
+//     const headers = {
+//       'Content-Disposition': `attachment; filename=${document.originalFileName}`,
+//       'Content-Type': `${document.fileType}`,
+//     };
 
-    res.writeHead(200, headers);
+//     res.writeHead(200, headers);
 
-    // Stream the file to the response
-    const fileStream = fs.createReadStream(filePath);
-    fileStream.pipe(res);
-  } catch (err) {
-    next(new Error((err as Error).message));
-  }
-};
+//     // Stream the file to the response
+//     const fileStream = fs.createReadStream(filePath);
+//     fileStream.pipe(res);
+//   } catch (err) {
+//     next(new Error((err as Error).message));
+//   }
+// };
 
 export const viewDocumentFromWorkspace = async (
   req: RequestAuth,

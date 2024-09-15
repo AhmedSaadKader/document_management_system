@@ -1,8 +1,8 @@
 import { Router } from 'express';
 import {
-  getAllDocuments,
+  // getAllDocuments,
   // createDocument,
-  uploadDocument,
+  // uploadDocument,
   softDeleteDocument,
   recycleBin,
   restoreDocument,
@@ -13,14 +13,14 @@ import {
   downloadDocument,
 } from '../controllers/document_controller';
 import auth from '../middleware/auth';
-import { uploadFileMiddleware } from '../utils/file_upload_utils';
+// import { uploadFileMiddleware } from '../utils/file_upload_utils';
 
 const router = Router();
 
 router.use(auth);
 
 // Route to get all documents
-router.get('/', getAllDocuments);
+// router.get('/', getAllDocuments);
 
 // Route to create a new document
 // router.post('/', createDocument);
@@ -49,6 +49,6 @@ router.get('/:documentId/preview', previewDocument);
 router.get('/:documentId/download', downloadDocument);
 
 // Route to upload a document
-router.post('/upload', uploadFileMiddleware, uploadDocument);
+// router.post('/upload', uploadFileMiddleware, uploadDocument);
 
 export default router;

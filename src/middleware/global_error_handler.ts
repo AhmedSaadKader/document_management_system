@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from 'express';
 import {
   DatabaseConnectionError,
   InvalidPasswordError,
+  NotFoundError,
   NoUsersError,
   UserAlreadyExistsError,
   UserCreationError,
@@ -16,6 +17,10 @@ const globalErrorHandler = (
   res: Response,
   next: NextFunction
 ) => {
+  if (err instanceof NotFoundError) {
+    return res.status(404).json({ error: err.message });
+  }
+
   if (err instanceof UserNotFoundError) {
     return res.status(404).json({ error: err.message });
   }
