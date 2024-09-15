@@ -6,9 +6,15 @@ import {
   DatabaseConnectionError,
   NotFoundError,
 } from '../middleware/error_handler';
-import { createBucket, readFile, uploadFile } from '../utils/s3_utils';
-import path from 'path';
+import {
+  createBucket,
+  readFile,
+  streamToResponse,
+  streamToString,
+  uploadFile,
+} from '../utils/s3_utils';
 import fs from 'fs';
+import { Readable } from 'stream';
 
 /**
  * Get the details of a document by its ID.
@@ -175,7 +181,8 @@ export const permanentlyDeleteDocument = async (
  * @param res - The response object.
  * @param next - The next middleware for error handling.
  * @returns A file stream of the requested document.
- */ export const downloadDocument = async (
+ */
+export const downloadDocument = async (
   req: RequestAuth,
   res: Response,
   next: NextFunction
@@ -203,12 +210,17 @@ export const permanentlyDeleteDocument = async (
     // Read file from S3 bucket
     const s3ReadFile = await readFile(bucketName, fileKey);
 
-    if (s3ReadFile) {
-      // Stream the S3 file to the response
-      s3ReadFile.pipe(res);
+    // If Body is a Readable stream (Node.js environment), pipe it to the response
+    if (s3ReadFile instanceof Readable) {
+      streamToResponse(s3ReadFile, res);
+    } else if (s3ReadFile instanceof Blob) {
+      // For Blob, convert to ArrayBuffer and send it as the response
+      const arrayBuffer = await s3ReadFile.arrayBuffer();
+      res.end(Buffer.from(arrayBuffer));
     } else {
-      // File not found in S3
-      return res.status(404).json({ message: 'File not found in S3' });
+      return res
+        .status(500)
+        .json({ message: 'Unsupported response Body type' });
     }
   } catch (err) {
     next(new Error((err as Error).message));
@@ -263,6 +275,7 @@ export const filterDocuments = async (
  * @param next - The next middleware for error handling.
  * @returns A base64-encoded string of the document file.
  */
+
 export const previewDocument = async (
   req: RequestAuth,
   res: Response,
@@ -288,31 +301,24 @@ export const previewDocument = async (
     const fileKey = document.filePath;
 
     // Read file from S3 bucket
-    const s3ReadFile = await readFile(bucketName, fileKey);
+    const Body = await readFile(bucketName, fileKey);
 
-    if (!s3ReadFile) {
+    if (!Body) {
       return res.status(404).json({ message: 'File not found in S3' });
     }
 
-    // Collect the file data (Body) from S3 and convert it to a Base64 string
-    const chunks: unknown[] = [];
-    s3ReadFile.on('data', (chunk: unknown) => {
-      chunks.push(chunk);
-    });
-
-    s3ReadFile.on('end', () => {
-      const fileBuffer = Buffer.concat(chunks);
-      const base64Data = fileBuffer.toString('base64');
-
-      // Send the Base64 string as a response
-      res.json({ base64: base64Data });
-    });
-
-    s3ReadFile.on('error', (err) => {
-      return res
-        .status(500)
-        .json({ message: 'Failed to read document from S3' });
-    });
+    // If Body is a Readable stream (Node.js environment), convert it to a Base64 string
+    if (Body instanceof Readable) {
+      const base64Data = await streamToString(Body);
+      return res.json({ base64: base64Data });
+    } else if (Body instanceof Blob) {
+      // Handle Blob case (for environments where Body is a Blob)
+      const arrayBuffer = await Body.arrayBuffer();
+      const base64Data = Buffer.from(arrayBuffer).toString('base64');
+      return res.json({ base64: base64Data });
+    } else {
+      return res.status(500).json({ message: 'Unsupported Body type' });
+    }
   } catch (err) {
     next(new Error((err as Error).message));
   }

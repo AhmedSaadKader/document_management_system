@@ -137,7 +137,7 @@ describe('Workspace Controllers', () => {
     const savedDocument = await Document.findById(response.body.document._id);
 
     expect(savedDocument).not.toBeNull();
-    expect(savedDocument!.filePath).toContain('uploads');
+    expect(savedDocument!.filePath).toContain('Ahmed_Saad_s_Resume');
     expect(savedDocument!.documentName).toBe('New Document');
   });
 
@@ -164,7 +164,7 @@ describe('Workspace Controllers', () => {
     expect(downloadDocumentResponse.headers['content-disposition']).toMatch(
       /attachment; filename=Ahmed_Saad_s_Resume.pdf/
     );
-    expect(filePath).toContain('uploads');
+    expect(filePath).toContain('Ahmed_Saad_s_Resume');
 
     // Step 3: Preview the uploaded file
     const previewDocumentResponse = await request(app)

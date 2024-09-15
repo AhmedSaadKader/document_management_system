@@ -8,6 +8,8 @@ import {
   S3Client,
   S3ClientConfig,
 } from '@aws-sdk/client-s3';
+import { Readable } from 'stream';
+import { Response } from 'express';
 
 const s3Client = new S3Client({
   region: process.env.AWS_REGION,
@@ -18,7 +20,7 @@ export const createBucket = async (bucketName: string) => {
     await s3Client.send(new CreateBucketCommand({ Bucket: bucketName }));
     console.log(`Bucket created: ${bucketName}`);
   } catch (error) {
-    console.error((error as Error).message);
+    console.log((error as Error).message);
   }
 };
 
@@ -52,6 +54,24 @@ export const listBuckets = async () => {
   } catch (error) {
     console.error('Error listing buckets:', error);
   }
+};
+
+export const streamToString = (stream: Readable): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const chunks: Uint8Array[] = [];
+    stream.on('data', (chunk) => chunks.push(chunk));
+    stream.on('error', reject);
+    stream.on('end', () => resolve(Buffer.concat(chunks).toString('base64'))); // Convert to base64
+  });
+};
+
+export const streamToResponse = (stream: Readable, res: Response) => {
+  stream.on('data', (chunk) => res.write(chunk));
+  stream.on('end', () => res.end());
+  stream.on('error', (err) => {
+    console.error('Stream error:', err);
+    res.status(500).json({ message: 'Error streaming the file' });
+  });
 };
 
 // Read a file
