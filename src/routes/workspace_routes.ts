@@ -7,8 +7,8 @@ import {
   getWorkspaceById,
   addDocumentToWorkspace,
   deleteDocumentFromWorkspace,
-  downloadDocumentFromWorkspace,
-  viewDocumentFromWorkspace,
+  // downloadDocumentFromWorkspace,
+  // viewDocumentFromWorkspace,
   shareWorkspace,
   getSharedWorkspaces,
   getRecentWorkspaces,
@@ -53,15 +53,15 @@ router.delete(
   deleteDocumentFromWorkspace
 );
 
-router.get(
-  '/:workspaceId/documents/:documentId/download',
-  downloadDocumentFromWorkspace
-);
+// router.get(
+//   '/:workspaceId/documents/:documentId/download',
+//   downloadDocumentFromWorkspace
+// );
 
-router.get(
-  '/:workspaceId/documents/:documentId/view',
-  viewDocumentFromWorkspace
-);
+// router.get(
+//   '/:workspaceId/documents/:documentId/view',
+//   viewDocumentFromWorkspace
+// );
 
 router.get('/:workspaceId/documents/filter', filterDocuments);
 

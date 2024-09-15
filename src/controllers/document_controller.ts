@@ -1,82 +1,14 @@
 import { Response, NextFunction } from 'express';
 import { RequestAuth } from '../../types';
 import DocumentModel from '../models/document';
-import Workspace from '../models/workspace';
+// import Workspace from '../models/workspace';
 import {
   DatabaseConnectionError,
   NotFoundError,
 } from '../middleware/error_handler';
-import { createBucket, uploadFile } from '../utils/s3_utils';
+// import { createBucket, uploadFile } from '../utils/s3_utils';
 import path from 'path';
 import fs from 'fs';
-
-export const getAllDocuments = async (
-  req: RequestAuth,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const userId = req.user?.national_id;
-
-    if (!userId) {
-      return res.status(401).json({ message: 'Unauthorized access' });
-    }
-
-    // Fetch documents belonging to the authenticated user
-    const documents = await DocumentModel.find({
-      userId: userId,
-      deleted: false,
-    });
-
-    res.json(documents);
-  } catch (err) {
-    next(new DatabaseConnectionError((err as Error).message));
-  }
-};
-
-export const createDocument = async (
-  req: RequestAuth,
-  res: Response,
-  next: NextFunction
-) => {
-  const { documentName, workspace } = req.body;
-
-  try {
-    // Check if the workspace exists
-    const workspaceObject = await Workspace.findById(workspace);
-    if (!workspaceObject) {
-      return next(new NotFoundError('Workspace not found'));
-    }
-
-    if (!documentName) {
-      throw new Error('Missing document name');
-    }
-
-    if (!req.user!.national_id) {
-      throw new Error('Missing user id');
-    }
-
-    if (!workspace) {
-      throw new Error('Missing workspace');
-    }
-
-    // Create and save the new document
-    const document = new DocumentModel({
-      documentName,
-      userId: req.user!.national_id,
-      userEmail: req.user!.email,
-      workspace,
-    });
-    await document.save();
-
-    // Add the document to the workspace
-    workspaceObject.addDocument(document._id);
-
-    res.status(201).json(document);
-  } catch (err) {
-    next(new Error((err as Error).message));
-  }
-};
 
 export const getDocumentDetails = async (
   req: RequestAuth,
@@ -87,7 +19,7 @@ export const getDocumentDetails = async (
     const { documentId } = req.params;
     const document = await DocumentModel.findById(documentId);
     if (!document) {
-      return next(new NotFoundError('Document not found'));
+      return next(new NotFoundError('Document'));
     }
 
     if (document.userId !== req.user!.national_id) {
@@ -99,43 +31,6 @@ export const getDocumentDetails = async (
     res.status(201).json(document);
   } catch (err) {
     next(new Error((err as Error).message));
-  }
-};
-
-export const uploadDocument = async (
-  req: RequestAuth,
-  res: Response,
-  next: NextFunction
-) => {
-  if (!req.file) {
-    return res.status(400).send('No file uploaded.');
-  }
-
-  try {
-    const bucketName = process.env.AWS_BUCKET_NAME as string;
-    // Create the bucket if it doesn't exist
-    try {
-      await createBucket(bucketName);
-      console.log(`Bucket created or already exists: ${bucketName}`);
-    } catch (error) {
-      console.error(`Error creating bucket: ${error}`);
-      return res.status(500).send('Failed to create bucket.');
-    }
-    const fileKey = req.file.originalname;
-    const fileBody = req.file.buffer;
-    const contentType = req.file.mimetype;
-
-    // Upload to S3
-
-    const result = await uploadFile(bucketName, fileKey, fileBody, contentType);
-
-    // Optionally delete the local file after uploading to S3
-    //  fs.unlinkSync(path.join(uploadDir, req.file.filename));
-
-    res.json({ message: 'File uploaded successfully', result });
-  } catch (error) {
-    console.error(`Error uploading file: ${error}`);
-    next(error);
   }
 };
 
@@ -233,48 +128,6 @@ export const permanentlyDeleteDocument = async (
   }
 };
 
-export const previewDocument = async (
-  req: RequestAuth,
-  res: Response,
-  next: NextFunction
-) => {
-  const { documentId } = req.params;
-
-  try {
-    // Find the document by ID
-    const document = await DocumentModel.findById(documentId);
-
-    if (!document) {
-      return res.status(404).json({ message: 'Document not found' });
-    }
-
-    // Check if the authenticated user is allowed to preview the document
-    if (document.userId.toString() !== req.user!.national_id) {
-      return res.status(403).json({ message: 'Access denied' });
-    }
-
-    // Get the file path from the document record
-    const filePath = path.resolve(__dirname, '..\\..', document.filePath);
-
-    // Read the file data
-    fs.readFile(filePath, (err, data) => {
-      if (err) {
-        return res
-          .status(500)
-          .json({ message: 'Failed to read the document file' });
-      }
-
-      // Convert the file data to Base64
-      const base64Data = data.toString('base64');
-
-      // Send the Base64 string as a response
-      res.json({ base64: base64Data });
-    });
-  } catch (err) {
-    next(new Error((err as Error).message));
-  }
-};
-
 export const downloadDocument = async (
   req: RequestAuth,
   res: Response,
@@ -344,3 +197,150 @@ export const filterDocuments = async (
     next(new DatabaseConnectionError((err as Error).message));
   }
 };
+
+export const previewDocument = async (
+  req: RequestAuth,
+  res: Response,
+  next: NextFunction
+) => {
+  const { documentId } = req.params;
+
+  try {
+    // Find the document by ID
+    const document = await DocumentModel.findById(documentId);
+
+    if (!document) {
+      return res.status(404).json({ message: 'Document not found' });
+    }
+
+    // Check if the authenticated user is allowed to preview the document
+    if (document.userId.toString() !== req.user!.national_id) {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    // Get the file path from the document record
+    const filePath = path.resolve(__dirname, '..\\..', document.filePath);
+
+    // Read the file data
+    fs.readFile(filePath, (err, data) => {
+      if (err) {
+        return res
+          .status(500)
+          .json({ message: 'Failed to read the document file' });
+      }
+
+      // Convert the file data to Base64
+      const base64Data = data.toString('base64');
+
+      // Send the Base64 string as a response
+      res.json({ base64: base64Data });
+    });
+  } catch (err) {
+    next(new Error((err as Error).message));
+  }
+};
+
+// export const uploadDocument = async (
+//   req: RequestAuth,
+//   res: Response,
+//   next: NextFunction
+// ) => {
+//   if (!req.file) {
+//     return res.status(400).send('No file uploaded.');
+//   }
+
+//   try {
+//     const bucketName = process.env.AWS_BUCKET_NAME as string;
+//     // Create the bucket if it doesn't exist
+//     try {
+//       await createBucket(bucketName);
+//       console.log(`Bucket created or already exists: ${bucketName}`);
+//     } catch (error) {
+//       console.error(`Error creating bucket: ${error}`);
+//       return res.status(500).send('Failed to create bucket.');
+//     }
+//     const fileKey = req.file.originalname;
+//     const fileBody = req.file.buffer;
+//     const contentType = req.file.mimetype;
+
+//     // Upload to S3
+
+//     const result = await uploadFile(bucketName, fileKey, fileBody, contentType);
+
+//     // Optionally delete the local file after uploading to S3
+//     //  fs.unlinkSync(path.join(uploadDir, req.file.filename));
+
+//     res.json({ message: 'File uploaded successfully', result });
+//   } catch (error) {
+//     console.error(`Error uploading file: ${error}`);
+//     next(error);
+//   }
+// };
+
+// export const getAllDocuments = async (
+//   req: RequestAuth,
+//   res: Response,
+//   next: NextFunction
+// ) => {
+//   try {
+//     const userId = req.user?.national_id;
+
+//     if (!userId) {
+//       return res.status(401).json({ message: 'Unauthorized access' });
+//     }
+
+//     // Fetch documents belonging to the authenticated user
+//     const documents = await DocumentModel.find({
+//       userId: userId,
+//       deleted: false,
+//     });
+
+//     res.json(documents);
+//   } catch (err) {
+//     next(new DatabaseConnectionError((err as Error).message));
+//   }
+// };
+
+// export const createDocument = async (
+//   req: RequestAuth,
+//   res: Response,
+//   next: NextFunction
+// ) => {
+//   const { documentName, workspace } = req.body;
+
+//   try {
+//     // Check if the workspace exists
+//     const workspaceObject = await Workspace.findById(workspace);
+//     if (!workspaceObject) {
+//       return next(new NotFoundError('Workspace not found'));
+//     }
+
+//     if (!documentName) {
+//       throw new Error('Missing document name');
+//     }
+
+//     if (!req.user!.national_id) {
+//       throw new Error('Missing user id');
+//     }
+
+//     if (!workspace) {
+//       throw new Error('Missing workspace');
+//     }
+
+//     // Create and save the new document
+//     const document = new DocumentModel({
+//       documentName,
+//       userId: req.user!.national_id,
+//       userEmail: req.user!.email,
+//       workspace,
+//     });
+//     await document.save();
+
+//     // Add the document to the workspace
+//     workspaceObject.addDocument(document._id);
+
+//     res.status(201).json(document);
+//   } catch (err) {
+//     next(new Error((err as Error).message));
+//   }
+// };

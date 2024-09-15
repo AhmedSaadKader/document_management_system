@@ -23,6 +23,10 @@ export interface DocumentInterface extends mongoose.Document {
     updatedAt: Date;
     updatedBy: string;
   }[];
+  updateDocumentName(newName: string): Promise<DocumentInterface>;
+  linkToWorkspace(
+    workspaceId: mongoose.Types.ObjectId
+  ): Promise<DocumentInterface>;
 }
 
 const documentSchema = new mongoose.Schema({
@@ -122,6 +126,9 @@ documentSchema.methods.linkToWorkspace = async function (
   return this.save();
 };
 
-const DocumentModel = mongoose.model('Documents', documentSchema);
+const DocumentModel = mongoose.model<DocumentInterface>(
+  'Documents',
+  documentSchema
+);
 
 export default DocumentModel;
