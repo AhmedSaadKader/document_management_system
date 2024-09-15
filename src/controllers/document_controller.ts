@@ -10,6 +10,14 @@ import {
 import path from 'path';
 import fs from 'fs';
 
+/**
+ * Get the details of a document by its ID.
+ *
+ * @param req - The request object containing the authenticated user's information and document ID in the URL parameters.
+ * @param res - The response object.
+ * @param next - The next middleware for error handling.
+ * @returns The document details in JSON format.
+ */
 export const getDocumentDetails = async (
   req: RequestAuth,
   res: Response,
@@ -34,6 +42,14 @@ export const getDocumentDetails = async (
   }
 };
 
+/**
+ * Soft delete a document by marking it as deleted without removing it from the database.
+ *
+ * @param req - The request object containing the authenticated user's information and document ID in the URL parameters.
+ * @param res - The response object.
+ * @param next - The next middleware for error handling.
+ * @returns A success message if the document was soft-deleted.
+ */
 export const softDeleteDocument = async (
   req: RequestAuth,
   res: Response,
@@ -57,6 +73,14 @@ export const softDeleteDocument = async (
   }
 };
 
+/**
+ * Retrieve all documents that have been soft-deleted (recycle bin) for the authenticated user.
+ *
+ * @param req - The request object containing the authenticated user's information.
+ * @param res - The response object.
+ * @param next - The next middleware for error handling.
+ * @returns A list of documents that have been soft-deleted.
+ */
 export const recycleBin = async (
   req: RequestAuth,
   res: Response,
@@ -73,6 +97,14 @@ export const recycleBin = async (
   }
 };
 
+/**
+ * Restore a soft-deleted document, marking it as active again.
+ *
+ * @param req - The request object containing the authenticated user's information and document ID in the URL parameters.
+ * @param res - The response object.
+ * @param next - The next middleware for error handling.
+ * @returns A success message if the document was restored.
+ */
 export const restoreDocument = async (
   req: RequestAuth,
   res: Response,
@@ -100,6 +132,14 @@ export const restoreDocument = async (
   }
 };
 
+/**
+ * Permanently delete a soft-deleted document from the database.
+ *
+ * @param req - The request object containing the authenticated user's information and document ID in the URL parameters.
+ * @param res - The response object.
+ * @param next - The next middleware for error handling.
+ * @returns A success message if the document was permanently deleted.
+ */
 export const permanentlyDeleteDocument = async (
   req: RequestAuth,
   res: Response,
@@ -128,6 +168,14 @@ export const permanentlyDeleteDocument = async (
   }
 };
 
+/**
+ * Download a document by its ID.
+ *
+ * @param req - The request object containing the authenticated user's information and document ID in the URL parameters.
+ * @param res - The response object.
+ * @param next - The next middleware for error handling.
+ * @returns A file stream of the requested document.
+ */
 export const downloadDocument = async (
   req: RequestAuth,
   res: Response,
@@ -166,6 +214,14 @@ export const downloadDocument = async (
   }
 };
 
+/**
+ * Filter documents based on search criteria (e.g., name, sort by date) for the authenticated user.
+ *
+ * @param req - The request object containing the authenticated user's information and optional query parameters for search and sorting.
+ * @param res - The response object.
+ * @param next - The next middleware for error handling.
+ * @returns A list of documents matching the search criteria.
+ */
 export const filterDocuments = async (
   req: RequestAuth,
   res: Response,
@@ -198,6 +254,14 @@ export const filterDocuments = async (
   }
 };
 
+/**
+ * Preview a document by converting it to a base64 string.
+ *
+ * @param req - The request object containing the authenticated user's information and document ID in the URL parameters.
+ * @param res - The response object.
+ * @param next - The next middleware for error handling.
+ * @returns A base64-encoded string of the document file.
+ */
 export const previewDocument = async (
   req: RequestAuth,
   res: Response,
@@ -240,107 +304,115 @@ export const previewDocument = async (
   }
 };
 
-// export const uploadDocument = async (
-//   req: RequestAuth,
-//   res: Response,
-//   next: NextFunction
-// ) => {
-//   if (!req.file) {
-//     return res.status(400).send('No file uploaded.');
-//   }
+// Uncomment the following sections if S3 upload functionality is needed
 
-//   try {
-//     const bucketName = process.env.AWS_BUCKET_NAME as string;
-//     // Create the bucket if it doesn't exist
-//     try {
-//       await createBucket(bucketName);
-//       console.log(`Bucket created or already exists: ${bucketName}`);
-//     } catch (error) {
-//       console.error(`Error creating bucket: ${error}`);
-//       return res.status(500).send('Failed to create bucket.');
-//     }
-//     const fileKey = req.file.originalname;
-//     const fileBody = req.file.buffer;
-//     const contentType = req.file.mimetype;
+/*
+export const uploadDocument = async (
+  req: RequestAuth,
+  res: Response,
+  next: NextFunction
+) => {
+  if (!req.file) {
+    return res.status(400).send('No file uploaded.');
+  }
 
-//     // Upload to S3
+  try {
+    const bucketName = process.env.AWS_BUCKET_NAME as string;
+    // Create the bucket if it doesn't exist
+    try {
+      await createBucket(bucketName);
+      console.log(`Bucket created or already exists: ${bucketName}`);
+    } catch (error) {
+      console.error(`Error creating bucket: ${error}`);
+      return res.status(500).send('Failed to create bucket.');
+    }
+    const fileKey = req.file.originalname;
+    const fileBody = req.file.buffer;
+    const contentType = req.file.mimetype;
 
-//     const result = await uploadFile(bucketName, fileKey, fileBody, contentType);
+    // Upload to S3
 
-//     // Optionally delete the local file after uploading to S3
-//     //  fs.unlinkSync(path.join(uploadDir, req.file.filename));
+    const result = await uploadFile(bucketName, fileKey, fileBody, contentType);
 
-//     res.json({ message: 'File uploaded successfully', result });
-//   } catch (error) {
-//     console.error(`Error uploading file: ${error}`);
-//     next(error);
-//   }
-// };
+    // Optionally delete the local file after uploading to S3
+    //  fs.unlinkSync(path.join(uploadDir, req.file.filename));
 
-// export const getAllDocuments = async (
-//   req: RequestAuth,
-//   res: Response,
-//   next: NextFunction
-// ) => {
-//   try {
-//     const userId = req.user?.national_id;
+    res.json({ message: 'File uploaded successfully', result });
+  } catch (error) {
+    console.error(`Error uploading file: ${error}`);
+    next(error);
+  }
+};
+*/
 
-//     if (!userId) {
-//       return res.status(401).json({ message: 'Unauthorized access' });
-//     }
+/*
+export const getAllDocuments = async (
+  req: RequestAuth,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const userId = req.user?.national_id;
 
-//     // Fetch documents belonging to the authenticated user
-//     const documents = await DocumentModel.find({
-//       userId: userId,
-//       deleted: false,
-//     });
+    if (!userId) {
+      return res.status(401).json({ message: 'Unauthorized access' });
+    }
 
-//     res.json(documents);
-//   } catch (err) {
-//     next(new DatabaseConnectionError((err as Error).message));
-//   }
-// };
+    // Fetch documents belonging to the authenticated user
+    const documents = await DocumentModel.find({
+      userId: userId,
+      deleted: false,
+    });
 
-// export const createDocument = async (
-//   req: RequestAuth,
-//   res: Response,
-//   next: NextFunction
-// ) => {
-//   const { documentName, workspace } = req.body;
+    res.json(documents);
+  } catch (err) {
+    next(new DatabaseConnectionError((err as Error).message));
+  }
+};
+*/
 
-//   try {
-//     // Check if the workspace exists
-//     const workspaceObject = await Workspace.findById(workspace);
-//     if (!workspaceObject) {
-//       return next(new NotFoundError('Workspace not found'));
-//     }
+/*
+export const createDocument = async (
+  req: RequestAuth,
+  res: Response,
+  next: NextFunction
+) => {
+  const { documentName, workspace } = req.body;
 
-//     if (!documentName) {
-//       throw new Error('Missing document name');
-//     }
+  try {
+    // Check if the workspace exists
+    const workspaceObject = await Workspace.findById(workspace);
+    if (!workspaceObject) {
+      return next(new NotFoundError('Workspace not found'));
+    }
 
-//     if (!req.user!.national_id) {
-//       throw new Error('Missing user id');
-//     }
+    if (!documentName) {
+      throw new Error('Missing document name');
+    }
 
-//     if (!workspace) {
-//       throw new Error('Missing workspace');
-//     }
+    if (!req.user!.national_id) {
+      throw new Error('Missing user id');
+    }
 
-//     // Create and save the new document
-//     const document = new DocumentModel({
-//       documentName,
-//       userId: req.user!.national_id,
-//       userEmail: req.user!.email,
-//       workspace,
-//     });
-//     await document.save();
+    if (!workspace) {
+      throw new Error('Missing workspace');
+    }
 
-//     // Add the document to the workspace
-//     workspaceObject.addDocument(document._id);
+    // Create and save the new document
+    const document = new DocumentModel({
+      documentName,
+      userId: req.user!.national_id,
+      userEmail: req.user!.email,
+      workspace,
+    });
+    await document.save();
 
-//     res.status(201).json(document);
-//   } catch (err) {
-//     next(new Error((err as Error).message));
-//   }
-// };
+    // Add the document to the workspace
+    workspaceObject.addDocument(document._id);
+
+    res.status(201).json(document);
+  } catch (err) {
+    next(new Error((err as Error).message));
+  }
+};
+*/
