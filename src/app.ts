@@ -26,6 +26,7 @@ app.use(express.json());
 
 // Middleware to enable Cross-Origin Resource Sharing (CORS)
 if (process.env.ENV == 'production') {
+  console.log('production');
   app.use(
     cors({
       origin: ['http://localhost:3000', 'https://dms-atos.netlify.app/'],
@@ -36,6 +37,7 @@ if (process.env.ENV == 'production') {
     })
   );
 } else {
+  console.log('dev');
   app.use(
     cors({
       exposedHeaders: ['Content-Disposition'],
