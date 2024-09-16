@@ -4,7 +4,7 @@
   "description": "MERN stack Document Management System with integrated relational and NoSQL databases.",
   "main": "app.js",
   "scripts": {
-    "start": "node dist/app.js",
+    "start": "sleep 3 && node dist/app.js",
     "nodemon": "nodemon src/app.ts",
     "build": "tsc",
     "jasmine": "jest --coverage --detectOpenHandles",
