@@ -25,15 +25,23 @@ const apiVersion = '/api/v1';
 app.use(express.json());
 
 // Middleware to enable Cross-Origin Resource Sharing (CORS)
-app.use(
-  cors({
-    origin: ['http://localhost:3000', 'https://dms-atos.netlify.app/'],
-    credentials: true,
-    exposedHeaders: ['Content-Disposition'],
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-  })
-);
+if (process.env.ENV == 'production') {
+  app.use(
+    cors({
+      origin: ['http://localhost:3000', 'https://dms-atos.netlify.app/'],
+      credentials: true,
+      exposedHeaders: ['Content-Disposition'],
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization'],
+    })
+  );
+} else {
+  app.use(
+    cors({
+      exposedHeaders: ['Content-Disposition'],
+    })
+  );
+}
 
 // Route handler for the root path
 // Sends a simple response to indicate that the server is running

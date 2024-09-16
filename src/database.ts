@@ -15,6 +15,11 @@ const {
   POSTGRES_PASSWORD,
   ENV,
   MONGODB_CONNECTION,
+  POSTGRES_HOST_DEV,
+  POSTGRES_PORT_DEV,
+  POSTGRES_DB_DEV,
+  POSTGRES_USER_DEV,
+  POSTGRES_PASSWORD_DEV,
 } = process.env;
 
 // Create a new Pool instance for managing PostgreSQL connections
@@ -40,11 +45,11 @@ if (ENV !== 'test') {
 // Development environment
 if (ENV == 'dev') {
   sqlClient = new Pool({
-    host: POSTGRES_HOST,
-    port: Number(POSTGRES_PORT) | 5432,
-    database: POSTGRES_DB,
-    user: POSTGRES_USER,
-    password: POSTGRES_PASSWORD,
+    host: POSTGRES_HOST_DEV,
+    port: Number(POSTGRES_PORT_DEV) | 5432,
+    database: POSTGRES_DB_DEV,
+    user: POSTGRES_USER_DEV,
+    password: POSTGRES_PASSWORD_DEV,
   });
 }
 
@@ -54,6 +59,17 @@ if (ENV == 'test') {
     host: POSTGRES_HOST,
     port: Number(POSTGRES_PORT),
     database: POSTGRES_DB_TEST,
+    user: POSTGRES_USER,
+    password: POSTGRES_PASSWORD,
+  });
+}
+
+// Production environment
+if (ENV == 'production') {
+  sqlClient = new Pool({
+    host: POSTGRES_HOST,
+    port: Number(POSTGRES_PORT),
+    database: POSTGRES_DB,
     user: POSTGRES_USER,
     password: POSTGRES_PASSWORD,
   });
