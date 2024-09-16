@@ -29,7 +29,7 @@ if (process.env.ENV == 'production') {
   console.log('production');
   app.use(
     cors({
-      origin: ['http://localhost:3000', 'https://dms-atos.netlify.app/'],
+      origin: ['https://dms-atos.netlify.app'],
       credentials: true,
       exposedHeaders: ['Content-Disposition'],
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
