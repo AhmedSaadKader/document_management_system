@@ -15,13 +15,10 @@ import {
   NoUsersError,
 } from '../../middleware/error_handler';
 import { server } from '../../app';
+import { sqlClient } from '../../database';
 
 describe('User Model Unit Tests', () => {
   let userModel: UserModel;
-
-  beforeAll(async () => {
-    // Setup the database with test data if necessary
-  });
 
   beforeEach(() => {
     userModel = new UserModel();
@@ -34,8 +31,9 @@ describe('User Model Unit Tests', () => {
     ]);
   });
 
-  afterAll((done) => {
-    server.close(done);
+  afterAll(async () => {
+    await sqlClient.end();
+    server.close();
   });
 
   // 1. Test for creating a user

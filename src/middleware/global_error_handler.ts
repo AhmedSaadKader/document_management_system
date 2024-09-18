@@ -4,6 +4,8 @@ import {
   InvalidPasswordError,
   NotFoundError,
   NoUsersError,
+  OTPExpiredError,
+  OTPInvalidError,
   UserAlreadyExistsError,
   UserCreationError,
   UserDeletionError,
@@ -44,12 +46,19 @@ const globalErrorHandler = (
   }
 
   if (err instanceof InvalidPasswordError) {
-    console.log('invalid password error');
     res.status(401).json({ error: err.message });
   }
 
   if (err instanceof UserAlreadyExistsError) {
     res.status(409).json({ error: err.message });
+  }
+
+  if (err instanceof OTPExpiredError) {
+    res.status(400).json({ message: 'OTP has expired' });
+  }
+
+  if (err instanceof OTPInvalidError) {
+    res.status(400).json({ message: 'Invalid OTP' });
   }
 
   if (err instanceof DatabaseConnectionError) {

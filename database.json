@@ -9,16 +9,16 @@
   },
   "test": {
     "driver": "pg",
-    "host": { "ENV": "POSTGRES_HOST" },
+    "host": { "ENV": "POSTGRES_HOST_DEV" },
     "database": { "ENV": "POSTGRES_DB_TEST" },
-    "user": { "ENV": "POSTGRES_USER" },
-    "password": { "ENV": "POSTGRES_PASSWORD" },
-    "port": { "ENV": "POSTGRES_PORT" }
+    "user": { "ENV": "POSTGRES_USER_DEV" },
+    "password": { "ENV": "POSTGRES_PASSWORD_DEV" },
+    "port": { "ENV": "POSTGRES_PORT_DEV" }
   },
   "production": {
     "driver": "pg",
     "host": { "ENV": "POSTGRES_HOST" },
-    "database": { "ENV": "POSTGRES_DB_TEST" },
+    "database": { "ENV": "POSTGRES_DB" },
     "user": { "ENV": "POSTGRES_USER" },
     "password": { "ENV": "POSTGRES_PASSWORD" },
     "port": { "ENV": "POSTGRES_PORT" }

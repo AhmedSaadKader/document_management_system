@@ -13,6 +13,20 @@ export class UserNotFoundError extends Error {
   }
 }
 
+export class OTPInvalidError extends Error {
+  constructor() {
+    super('The OTP provided is invalid or has already been used.');
+    this.name = 'OTPInvalidError';
+  }
+}
+
+export class OTPExpiredError extends Error {
+  constructor() {
+    super('The OTP has expired.');
+    this.name = 'OTPExpiredError';
+  }
+}
+
 /**
  * Custom error class to handle cases where no users are available.
  */
