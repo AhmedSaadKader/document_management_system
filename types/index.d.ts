@@ -11,7 +11,7 @@ export interface RequestAuth extends Request {
   user?: UserPayload;
   file?: Express.Multer.File & { s3Key?: string; s3Bucket?: string };
   body: {
-    email?: string;
+    email: string;
     otp?: string;
     documentName?: string;
     workspace?: mongoose.Types.ObjectId;
@@ -22,6 +22,8 @@ export interface RequestAuth extends Request {
     permission?: string;
     tags: string[];
     permissions: string;
+    national_id: string;
+    password: string;
     first_name: string;
     last_name: string;
     file?: File;

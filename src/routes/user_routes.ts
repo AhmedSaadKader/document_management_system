@@ -5,8 +5,6 @@ import {
   loginUser,
   registerUser,
   getUserData,
-  generateOTP,
-  validateOTP,
 } from '../controllers/user_controllers';
 import auth from '../middleware/auth';
 
@@ -73,12 +71,6 @@ router.get('/:email', getUserData);
  * @security Bearer
  */
 router.delete('/:email', deleteUser);
-
-// Endpoint to generate and send OTP
-router.post('/send-otp', generateOTP);
-
-// Endpoint to verify OTP
-router.post('/verify-otp', validateOTP);
 
 // Uncomment the following route if the updateUser functionality is implemented
 

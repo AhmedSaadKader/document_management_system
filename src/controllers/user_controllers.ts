@@ -65,7 +65,7 @@ export const getUserData = async (
  * @returns A JSON response containing the JWT token and the new user details.
  */
 export const registerUser = async (
-  req: Request,
+  req: RequestAuth,
   res: Response,
   next: NextFunction
 ): Promise<void> => {
@@ -163,40 +163,6 @@ export const deleteUser = async (
     }
     const deletedUser = await user.delete(req.params.email);
     res.json(deletedUser);
-  } catch (error) {
-    next(error);
-  }
-};
-
-export const generateOTP = async (
-  req: RequestAuth,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  const { email } = req.body;
-  try {
-    if (!email) {
-      res.status(400).json({ message: 'No email provided' });
-    }
-    await user.generateAndSendOTP(email as string);
-    res.status(200).json({ message: 'OTP sent to email.' });
-  } catch (error) {
-    next(error);
-  }
-};
-
-export const validateOTP = async (
-  req: RequestAuth,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  const { email, otp } = req.body;
-  try {
-    if (!email || !otp) {
-      res.status(400).json({ message: 'No email or OTP provided' });
-    }
-    const userVerified = await user.verifyOTP(email as string, otp as string);
-    res.status(200).json({ message: 'OTP verified.', userVerified });
   } catch (error) {
     next(error);
   }

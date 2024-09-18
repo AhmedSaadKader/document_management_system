@@ -1,11 +1,12 @@
-CREATE TABLE IF NOT EXISTS user_otps (
-  id SERIAL PRIMARY KEY,
-  email VARCHAR(100) NOT NULL,   -- The email address associated with the OTP
-  otp_code VARCHAR(10) NOT NULL, -- The OTP code, adjust length as needed
-  expires_at TIMESTAMP NOT NULL, -- Expiration timestamp for the OTP
-  used BOOLEAN DEFAULT FALSE,    -- Status to track if OTP has been used
+CREATE TABLE IF NOT EXISTS users_otps (
+  email VARCHAR(100) PRIMARY KEY,
+  otp_code VARCHAR(10) NOT NULL,
+  expires_at TIMESTAMP NOT NULL,
+  used BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+SET timezone = 'UTC'; 
+
 -- Index for faster lookup
-CREATE INDEX idx_user_otps_email ON user_otps(email);
+CREATE INDEX idx_users_otps_email ON users_otps(email);
