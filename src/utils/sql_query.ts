@@ -24,7 +24,7 @@ import { DatabaseConnectionError } from '../middleware/error_handler';
  */
 export const connectionSQLResult = async (
   sqlQuery: string,
-  sqlParams: (string | number | null)[]
+  sqlParams: (string | number | Date | null)[]
 ) => {
   const conn = await sqlClient.connect();
   try {
