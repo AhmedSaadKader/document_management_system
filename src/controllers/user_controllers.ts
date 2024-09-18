@@ -65,7 +65,7 @@ export const getUserData = async (
  * @returns A JSON response containing the JWT token and the new user details.
  */
 export const registerUser = async (
-  req: Request,
+  req: RequestAuth,
   res: Response,
   next: NextFunction
 ): Promise<void> => {

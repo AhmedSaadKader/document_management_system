@@ -56,11 +56,11 @@ if (ENV == 'dev') {
 // Test environment
 if (ENV == 'test') {
   sqlClient = new Pool({
-    host: POSTGRES_HOST,
-    port: Number(POSTGRES_PORT),
+    host: POSTGRES_HOST_DEV,
+    port: Number(POSTGRES_PORT_DEV) | 5432,
     database: POSTGRES_DB_TEST,
-    user: POSTGRES_USER,
-    password: POSTGRES_PASSWORD,
+    user: POSTGRES_USER_DEV,
+    password: POSTGRES_PASSWORD_DEV,
   });
 }
 

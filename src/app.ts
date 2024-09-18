@@ -5,6 +5,7 @@ import userRouter from './routes/user_routes';
 import documentRouter from './routes/document_routes';
 import workspaceRouter from './routes/workspace_routes';
 import favoriteRoutes from './routes/favorite_routes';
+import otpRoutes from './routes/otp_routes';
 import globalErrorHandler from './middleware/global_error_handler';
 
 // Load environment variables from a .env file into process.env
@@ -52,6 +53,8 @@ app.get('/', function (req: Request, res: Response) {
 });
 
 app.use(apiVersion + '/users', userRouter);
+
+app.use(apiVersion + '/otp', otpRoutes);
 
 app.use(apiVersion + '/documents', documentRouter);
 

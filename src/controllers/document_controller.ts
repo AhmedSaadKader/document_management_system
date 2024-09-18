@@ -342,10 +342,6 @@ export const s3UploadMiddleware = async (
     const contentType = file.mimetype;
     const fileBody = fs.readFileSync(filePath);
 
-    // console.log(file);
-
-    // console.log(fileBody, contentType);
-
     await createBucket(bucketName);
     console.log(`Bucket created or already exists: ${bucketName}`);
 
