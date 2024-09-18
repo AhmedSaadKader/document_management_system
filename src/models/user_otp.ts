@@ -1,6 +1,6 @@
 import { connectionSQLResult } from '../utils/sql_query';
 import crypto from 'crypto';
-import { OTPExpiredError, OTPInvalidError } from '../middleware/error_handler';
+import { OTPInvalidError } from '../middleware/error_handler';
 import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
 
@@ -41,9 +41,13 @@ export class UserOTPModel {
     const otpCode = crypto.randomInt(100000, 999999).toString(); // 6-digit OTP
     const expiresAt = new Date(Date.now() + 10 * 60000).toISOString(); // Expires in 10 minutes
 
+    // Insert new OTP or update if email already exists
     const sql = `
-      INSERT INTO user_otps (email, otp_code, expires_at)
-      VALUES ($1, $2, $3) RETURNING otp_code
+      INSERT INTO users_otps (email, otp_code, expires_at, used)
+      VALUES ($1, $2, $3, FALSE)
+      ON CONFLICT (email) 
+      DO UPDATE SET otp_code = EXCLUDED.otp_code, expires_at = EXCLUDED.expires_at, used = FALSE
+      RETURNING otp_code
     `;
 
     const result = await connectionSQLResult(sql, [email, otpCode, expiresAt]);
@@ -83,30 +87,24 @@ export class UserOTPModel {
 
   async verifyOTP(email: string, otpCode: string): Promise<boolean> {
     const sql = `
-      SELECT * FROM user_otps
-      WHERE email = $1 AND otp_code = $2 AND used = FALSE
+    SELECT * FROM users_otps
+    WHERE email = $1 AND otp_code = $2 AND used = FALSE AND expires_at > NOW()
     `;
     const result = await connectionSQLResult(sql, [email, otpCode]);
 
     if (result.rows.length === 0) {
-      throw new OTPInvalidError(); // Invalid OTP or already used
-    }
-
-    const otpRecord: UserOTP = result.rows[0];
-
-    if (new Date(otpRecord.expires_at) < new Date()) {
-      throw new OTPExpiredError(); // OTP has expired
+      throw new OTPInvalidError();
     }
 
     // Mark OTP as used
-    const updateSql = 'UPDATE user_otps SET used = TRUE WHERE id = $1';
-    await connectionSQLResult(updateSql, [otpRecord.id as number]);
+    const updateSql = 'UPDATE users_otps SET used = TRUE WHERE email = $1';
+    await connectionSQLResult(updateSql, [email]);
 
     return true;
   }
 
   async cleanExpiredOTPs(): Promise<void> {
-    const sql = 'DELETE FROM user_otps WHERE expires_at < NOW()';
+    const sql = 'DELETE FROM users_otps WHERE expires_at < NOW()';
     await connectionSQLResult(sql, []);
   }
 }

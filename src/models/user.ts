@@ -70,6 +70,13 @@ export class UserModel {
     return result.rows[0];
   }
 
+  async nationalIdExists(nationalId: string): Promise<User | void> {
+    const sql = 'SELECT * FROM users WHERE national_id=($1)';
+    const result = await connectionSQLResult(sql, [nationalId]);
+    if (!result.rows.length) return;
+    return result.rows[0];
+  }
+
   /**
    * Authenticates a user by checking the provided email and password.
    *
