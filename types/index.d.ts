@@ -12,6 +12,7 @@ export interface RequestAuth extends Request {
   file?: Express.Multer.File & { s3Key?: string; s3Bucket?: string };
   body: {
     email?: string;
+    otp?: string;
     documentName?: string;
     workspace?: mongoose.Types.ObjectId;
     workspaceId?: mongoose.Types.ObjectId;
