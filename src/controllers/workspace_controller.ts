@@ -164,11 +164,13 @@ export const createWorkspace = async (
   res: Response,
   next: NextFunction
 ) => {
-  const { workspaceName } = req.body;
+  const { workspaceName, description, isPublic } = req.body;
 
   try {
     const workspace = new Workspace({
       workspaceName,
+      description,
+      isPublic,
       userId: req.user!.national_id,
       userEmail: req.user!.email,
     });
