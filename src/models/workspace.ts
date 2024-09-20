@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 /**
  * Interface representing a permission in a workspace.
  *
- * @typedef {Object} Permission
+ * @interface {Object} Permission
  * @property {string} userEmail - The email of the user who has this permission.
  * @property {'editor' | 'viewer'} permission - The type of permission ('editor' or 'viewer').
  */
@@ -41,9 +41,10 @@ export interface Permission {
  */
 export interface WorkspaceInterface extends mongoose.Document {
   workspaceName: string;
-  description: string;
+  description?: string;
   userId: string;
   userEmail: string;
+  isPublic: boolean;
   documents: mongoose.Types.ObjectId[];
   permissions: Permission[];
   createdAt: Date;
@@ -52,7 +53,7 @@ export interface WorkspaceInterface extends mongoose.Document {
   removeDocument(documentId: string): Promise<WorkspaceInterface>;
   addUserAsEditor(email: string): Promise<WorkspaceInterface>;
   addUserAsViewer(email: string): Promise<WorkspaceInterface>;
-  isUserEditorOrViewer(email: string): 'editor' | 'viewer' | null;
+  isUserEditorOrViewer(email: string): 'owner' | 'editor' | 'viewer' | null;
 }
 
 const workspaceSchema = new mongoose.Schema({
@@ -71,6 +72,10 @@ const workspaceSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  isPublic: {
+    type: Boolean,
+    default: false,
+  },
   documents: [
     {
       type: mongoose.Schema.Types.ObjectId,
@@ -85,7 +90,7 @@ const workspaceSchema = new mongoose.Schema({
       },
       permission: {
         type: String,
-        enum: ['editor', 'viewer'],
+        enum: ['owner', 'editor', 'viewer'],
         required: true,
       },
     },
@@ -106,7 +111,9 @@ const workspaceSchema = new mongoose.Schema({
  * @param {string} documentId - The ID of the document to remove.
  * @returns {Promise<WorkspaceInterface>} - The updated workspace document.
  */
-workspaceSchema.methods.removeDocument = async function (documentId: string) {
+workspaceSchema.methods.removeDocument = async function (
+  documentId: string
+): Promise<WorkspaceInterface> {
   this.documents.pull(documentId);
   this.updatedAt = new Date();
   return this.save();
@@ -120,7 +127,7 @@ workspaceSchema.methods.removeDocument = async function (documentId: string) {
  */
 workspaceSchema.methods.addDocument = async function (
   documentId: mongoose.Types.ObjectId
-) {
+): Promise<WorkspaceInterface> {
   this.documents.push(documentId);
   this.updatedAt = new Date();
   return this.save();
@@ -132,7 +139,9 @@ workspaceSchema.methods.addDocument = async function (
  * @param {string} userEmail - The email of the user to add as an editor.
  * @returns {Promise<WorkspaceInterface>} - The updated workspace document.
  */
-workspaceSchema.methods.addUserAsEditor = async function (userEmail: string) {
+workspaceSchema.methods.addUserAsEditor = async function (
+  userEmail: string
+): Promise<WorkspaceInterface> {
   this.permissions.push({ userEmail, permission: 'editor' });
   return this.save();
 };
@@ -143,7 +152,9 @@ workspaceSchema.methods.addUserAsEditor = async function (userEmail: string) {
  * @param {string} userEmail - The email of the user to add as a viewer.
  * @returns {Promise<WorkspaceInterface>} - The updated workspace document.
  */
-workspaceSchema.methods.addUserAsViewer = async function (userEmail: string) {
+workspaceSchema.methods.addUserAsViewer = async function (
+  userEmail: string
+): Promise<WorkspaceInterface> {
   this.permissions.push({ userEmail, permission: 'viewer' });
   return this.save();
 };
@@ -154,7 +165,9 @@ workspaceSchema.methods.addUserAsViewer = async function (userEmail: string) {
  * @param {string} email - The email of the user to check.
  * @returns {'editor' | 'viewer' | null} - The permission level of the user ('editor' or 'viewer') or null if not found.
  */
-workspaceSchema.methods.isUserEditorOrViewer = function (email: string) {
+workspaceSchema.methods.isUserEditorOrViewer = function (
+  email: string
+): 'owner' | 'editor' | 'viewer' | null {
   const permission = this.permissions.find(
     (perm: Permission) => perm.userEmail === email
   );
@@ -170,7 +183,9 @@ workspaceSchema.methods.isUserEditorOrViewer = function (email: string) {
  * @param {string} userId - The user ID to search for.
  * @returns {Promise<WorkspaceInterface[]>} - An array of workspaces associated with the user ID.
  */
-workspaceSchema.statics.findByUserId = async function (userId: string) {
+workspaceSchema.statics.findByUserId = function (
+  userId: string
+): Promise<WorkspaceInterface[]> {
   return this.find({ user: userId });
 };
 
@@ -180,7 +195,9 @@ workspaceSchema.statics.findByUserId = async function (userId: string) {
  * @param {string} userEmail - The user email to search for.
  * @returns {Promise<WorkspaceInterface[]>} - An array of workspaces associated with the user email.
  */
-workspaceSchema.statics.findByUserEmail = async function (userEmail: string) {
+workspaceSchema.statics.findByUserEmail = async function (
+  userEmail: string
+): Promise<WorkspaceInterface[]> {
   return this.find({ user: userEmail });
 };
 

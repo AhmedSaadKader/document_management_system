@@ -27,5 +27,6 @@ export interface RequestAuth extends Request {
     first_name: string;
     last_name: string;
     file?: File;
+    isPublic: boolean;
   };
 }
