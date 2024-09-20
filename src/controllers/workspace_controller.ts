@@ -36,6 +36,71 @@ export const getAllWorkspaces = async (
 };
 
 /**
+ * Get all public workspaces sorted by the number of favorites and creation date.
+ *
+ * This function retrieves all public workspaces from the database, sorts them in descending order
+ * by the number of times they have been favorited. If two or more workspaces have the same number of
+ * favorites, they are further sorted by the creation date in descending order (most recent first).
+ *
+ * Aggregation pipeline:
+ * - `$match`: Filters the workspaces to include only public ones (`isPublic: true`).
+ * - `$lookup`: Joins the `favorites` collection to calculate how many times each workspace has been favorited.
+ * - `$addFields`: Adds a `favoritesCount` field to each workspace representing the total number of favorites.
+ * - `$sort`: Sorts by `favoritesCount` (descending) and then `createdAt` (descending).
+ *
+ * @async
+ * @function getPublicWorkspaces
+ * @param {RequestAuth} req - Express request object (extended with user info in `RequestAuth`).
+ * @param {Response} res - Express response object.
+ * @param {NextFunction} next - Express `next` function to pass control to error handler middleware.
+ * @returns {Promise<void>} - Returns a JSON response containing the sorted public workspaces.
+ * @throws {Error} - Passes any errors to the next middleware for error handling.
+ */
+
+export const getPublicWorkspaces = async (
+  req: RequestAuth,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const workspaces = await Workspace.aggregate([
+      // Match only public workspaces
+      {
+        $match: {
+          isPublic: true,
+        },
+      },
+      // Join with the Favorite collection
+      {
+        $lookup: {
+          from: 'favorites',
+          localField: '_id',
+          foreignField: 'workspaceId',
+          as: 'favorites',
+        },
+      },
+      // Add a new field 'favoritesCount' with the number of favorites
+      {
+        $addFields: {
+          favoritesCount: { $size: '$favorites' },
+        },
+      },
+      // Sort first by favorites count (descending), then by createdAt (descending)
+      {
+        $sort: {
+          favoritesCount: -1, // Descending order of favorites count
+          createdAt: -1, // Descending order of creation date if favorites are equal
+        },
+      },
+    ]);
+
+    res.json(workspaces);
+  } catch (err) {
+    next(new Error((err as Error).message));
+  }
+};
+
+/**
  * @description Retrieve a workspace by its ID and its documents, with optional search, sorting, and filtering.
  * @param {RequestAuth} req - The request object, containing user and query information.
  * @param {Response} res - The response object.
@@ -128,7 +193,7 @@ export const updateWorkspace = async (
   next: NextFunction
 ) => {
   const { workspaceId } = req.params;
-  const { workspaceName, description } = req.body;
+  const { workspaceName, description, isPublic } = req.body;
 
   try {
     const workspace = await Workspace.findById(workspaceId);
@@ -144,12 +209,13 @@ export const updateWorkspace = async (
     }
 
     workspace.workspaceName = workspaceName || workspace.workspaceName;
-    workspace.description = description || workspace.description;
+    workspace.description = description;
+    workspace.isPublic = isPublic;
     workspace.updatedAt = new Date();
 
     await workspace.save();
 
-    res.json(workspace);
+    res.status(200).json(workspace);
   } catch (err) {
     next(new DatabaseConnectionError((err as Error).message));
   }

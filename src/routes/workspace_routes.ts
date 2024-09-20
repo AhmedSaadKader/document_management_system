@@ -12,6 +12,7 @@ import {
   shareWorkspace,
   getSharedWorkspaces,
   getRecentWorkspaces,
+  getPublicWorkspaces,
 } from '../controllers/workspace_controller';
 import auth from '../middleware/auth';
 import { uploadFileMiddleware } from '../utils/file_upload_utils';
@@ -27,6 +28,9 @@ router.use(auth);
 
 // Route to get all workspaces
 router.get('/', getAllWorkspaces);
+
+// Route to get public workspaces
+router.get('/public', getPublicWorkspaces);
 
 // Route to create a new workspace
 router.post('/', createWorkspace);
