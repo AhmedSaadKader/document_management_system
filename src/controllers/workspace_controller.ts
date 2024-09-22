@@ -9,6 +9,8 @@ import {
 import fs from 'fs';
 import path from 'path';
 import mongoose from 'mongoose';
+import { deleteFile } from '../utils/s3_utils';
+import DocumentModel from '../models/document';
 
 /**
  * @description Retrieve all workspaces for the authenticated user.
@@ -25,9 +27,10 @@ export const getAllWorkspaces = async (
   try {
     const workspaces = await Workspace.find({
       userId: req.user!.national_id,
+      deleted: false,
     }).populate({
       path: 'documents',
-      match: { deleted: false },
+      match: { deleted: { $not: { $eq: true } } },
     });
     res.json(workspaces);
   } catch (err) {
@@ -68,6 +71,7 @@ export const getPublicWorkspaces = async (
       {
         $match: {
           isPublic: true,
+          deleted: { $not: { $eq: true } },
         },
       },
       // Join with the Favorite collection
@@ -223,14 +227,7 @@ export const updateWorkspace = async (
   }
 };
 
-/**
- * @description Delete a workspace by its ID.
- * @param {RequestAuth} req - The request object, containing workspace ID.
- * @param {Response} res - The response object.
- * @param {NextFunction} next - The next middleware function.
- * @returns {void}
- */
-export const deleteWorkspace = async (
+export const softDeleteWorkspace = async (
   req: RequestAuth,
   res: Response,
   next: NextFunction
@@ -238,13 +235,101 @@ export const deleteWorkspace = async (
   const { workspaceId } = req.params;
 
   try {
-    const workspace = await Workspace.findByIdAndDelete(workspaceId);
-
+    const workspace = await Workspace.findById(workspaceId);
     if (!workspace) {
       return next(new NotFoundError('Workspace not found'));
     }
 
-    res.status(204).json();
+    // Soft delete the workspace
+    workspace.deleted = true;
+    workspace.updatedAt = new Date();
+    await workspace.save();
+
+    res.status(200).json({ message: 'Workspace soft deleted successfully' });
+  } catch (err) {
+    next(new DatabaseConnectionError((err as Error).message));
+  }
+};
+
+export const permanentlyDeleteWorkspace = async (
+  req: RequestAuth,
+  res: Response,
+  next: NextFunction
+) => {
+  const { workspaceId } = req.params;
+
+  try {
+    const workspace =
+      await Workspace.findById(workspaceId).populate('documents');
+    if (!workspace) {
+      return next(new NotFoundError('Workspace not found'));
+    }
+
+    // Check if the workspace is soft deleted
+    if (!workspace.deleted) {
+      return res.status(400).json({ message: 'Workspace is not soft deleted' });
+    }
+
+    // Handle documents associated with the workspace
+    for (const document of workspace.documents) {
+      const documentObject = await DocumentModel.findById(document);
+      // Permanently delete the document from the database
+      if (!documentObject) continue;
+
+      const bucketName = process.env.AWS_BUCKET_NAME as string;
+      const fileKey = documentObject.filePath;
+      await DocumentModel.deleteOne({ _id: document });
+
+      // Optionally delete the document's file from S3
+      await deleteFile(bucketName, fileKey);
+    }
+
+    // Permanently delete the workspace
+    await Workspace.deleteOne({ _id: workspaceId });
+
+    res
+      .status(200)
+      .json({ message: 'Workspace and documents permanently deleted' });
+  } catch (err) {
+    next(new DatabaseConnectionError((err as Error).message));
+  }
+};
+
+// Fetch all soft-deleted workspaces
+export const fetchDeletedWorkspaces = async (
+  req: RequestAuth,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const deletedWorkspaces = await Workspace.find({ deleted: true });
+
+    res.status(200).json(deletedWorkspaces);
+  } catch (err) {
+    next(new DatabaseConnectionError((err as Error).message));
+  }
+};
+
+// Restore a soft-deleted workspace
+export const restoreWorkspace = async (
+  req: RequestAuth,
+  res: Response,
+  next: NextFunction
+) => {
+  const { workspaceId } = req.params;
+
+  try {
+    const workspace = await Workspace.findById(workspaceId);
+    if (!workspace || !workspace.deleted) {
+      return next(new NotFoundError('Workspace not found or not deleted'));
+    }
+
+    // Restore the workspace
+    workspace.deleted = false;
+    workspace.updatedAt = new Date();
+    await workspace.save();
+
+    res.status(200).json({ message: 'Workspace restored successfully' });
   } catch (err) {
     next(new DatabaseConnectionError((err as Error).message));
   }

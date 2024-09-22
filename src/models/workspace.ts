@@ -27,6 +27,7 @@ export interface Permission {
  * @property {Permission[]} permissions - An array of permissions assigned to users for the workspace.
  * @property {Date} createdAt - The date when the workspace was created.
  * @property {Date} updatedAt - The date when the workspace was last updated.
+ * @property {boolean} deleted - Whether the workspace is soft deleted or not.
  * @method {Promise<WorkspaceInterface>} addDocument - Adds a document to the workspace.
  * @param {mongoose.Types.ObjectId} documentId - The ID of the document to add.
  * @method {Promise<WorkspaceInterface>} removeDocument - Removes a document from the workspace.
@@ -49,6 +50,7 @@ export interface WorkspaceInterface extends mongoose.Document {
   permissions: Permission[];
   createdAt: Date;
   updatedAt: Date;
+  deleted: boolean;
   addDocument(documentId: mongoose.Types.ObjectId): Promise<WorkspaceInterface>;
   removeDocument(documentId: string): Promise<WorkspaceInterface>;
   addUserAsEditor(email: string): Promise<WorkspaceInterface>;
@@ -103,6 +105,7 @@ const workspaceSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  deleted: { type: Boolean, default: false },
 });
 
 /**
@@ -198,7 +201,7 @@ workspaceSchema.statics.findByUserId = function (
 workspaceSchema.statics.findByUserEmail = async function (
   userEmail: string
 ): Promise<WorkspaceInterface[]> {
-  return this.find({ user: userEmail });
+  return this.find({ userEmail, deleted: false });
 };
 
 const Workspace = mongoose.model<WorkspaceInterface>(

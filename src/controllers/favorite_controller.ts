@@ -96,9 +96,19 @@ export const getFavorites = async (
 
   try {
     // Find all favorited workspaces by the user
-    const favorites = await Favorite.find({ userId }).populate('workspaceId');
+    const favorites = await Favorite.find({ userId }).populate({
+      path: 'workspaceId',
+      match: {
+        deleted: { $not: { $eq: true } },
+      },
+    });
 
-    res.status(200).json(favorites.map((fav) => fav.workspaceId));
+    // Filter out null values from the populated results
+    const validFavorites = favorites
+      .map((fav) => fav.workspaceId)
+      .filter((workspace) => workspace !== null); // Ensures you only get valid workspaces
+
+    res.status(200).json(validFavorites);
   } catch (error) {
     next(error);
   }
