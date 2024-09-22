@@ -3,7 +3,6 @@ import {
   getAllWorkspaces,
   createWorkspace,
   updateWorkspace,
-  deleteWorkspace,
   getWorkspaceById,
   addDocumentToWorkspace,
   deleteDocumentFromWorkspace,
@@ -13,6 +12,10 @@ import {
   getSharedWorkspaces,
   getRecentWorkspaces,
   getPublicWorkspaces,
+  softDeleteWorkspace,
+  permanentlyDeleteWorkspace,
+  fetchDeletedWorkspaces,
+  restoreWorkspace,
 } from '../controllers/workspace_controller';
 import auth from '../middleware/auth';
 import { uploadFileMiddleware } from '../utils/file_upload_utils';
@@ -40,14 +43,23 @@ router.get('/shared-workspaces', getSharedWorkspaces);
 // Get recent workspaces for the logged-in user
 router.get('/recent', getRecentWorkspaces);
 
+// Route to fetch soft-deleted workspaces
+router.get('/deleted', fetchDeletedWorkspaces);
+
 // Route to get a specific workspace by ID
 router.get('/:workspaceId', getWorkspaceById);
 
 // Route to update a specific workspace by ID
 router.put('/:workspaceId', updateWorkspace);
 
-// Route to delete a specific workspace by ID
-router.delete('/:workspaceId', deleteWorkspace);
+// Route to soft delete a specific workspace by ID
+router.delete('/:workspaceId', softDeleteWorkspace);
+
+// Route to permanently delete a specific workspace by ID
+router.delete('/:workspaceId/permanent-delete', permanentlyDeleteWorkspace);
+
+// Route to restore a soft-deleted workspace
+router.put('/:workspaceId/restore', restoreWorkspace);
 
 router.post(
   '/:workspaceId/documents',

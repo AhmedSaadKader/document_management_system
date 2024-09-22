@@ -8,6 +8,7 @@ import {
 } from '../middleware/error_handler';
 import {
   createBucket,
+  deleteFile,
   readFile,
   streamToResponse,
   streamToString,
@@ -36,11 +37,11 @@ export const getDocumentDetails = async (
       return next(new NotFoundError('Document'));
     }
 
-    if (document.userId !== req.user!.national_id) {
-      return res
-        .status(403)
-        .json({ message: 'Not authorized to view this workspace' });
-    }
+    // if (document.userId !== req.user!.national_id) {
+    //   return res
+    //     .status(403)
+    //     .json({ message: 'Not authorized to view this workspace' });
+    // }
 
     res.status(201).json(document);
   } catch (err) {
@@ -139,12 +140,12 @@ export const restoreDocument = async (
 };
 
 /**
- * Permanently delete a soft-deleted document from the database.
+ * Permanently delete a soft-deleted document from the database and S3.
  *
  * @param req - The request object containing the authenticated user's information and document ID in the URL parameters.
  * @param res - The response object.
  * @param next - The next middleware for error handling.
- * @returns A success message if the document was permanently deleted.
+ * @returns A success message if the document and its associated S3 file were permanently deleted.
  */
 export const permanentlyDeleteDocument = async (
   req: RequestAuth,
@@ -163,8 +164,17 @@ export const permanentlyDeleteDocument = async (
       return res.status(400).json({ message: 'Document is not deleted' });
     }
 
-    // Permanently delete the document
+    const bucketName = process.env.AWS_BUCKET_NAME as string;
+    const fileKey = document.filePath;
+
+    // Permanently delete the document from MongoDB
     await DocumentModel.deleteOne({ _id: documentId });
+
+    // Delete the file from S3 if it exists
+    if (bucketName && fileKey) {
+      await deleteFile(bucketName, fileKey);
+      console.log(`Deleted S3 file: ${fileKey} from bucket: ${bucketName}`);
+    }
 
     res
       .status(200)
@@ -293,9 +303,9 @@ export const previewDocument = async (
     }
 
     // Check if the authenticated user is allowed to preview the document
-    if (document.userId.toString() !== req.user!.national_id) {
-      return res.status(403).json({ message: 'Access denied' });
-    }
+    // if (document.userId.toString() !== req.user!.national_id) {
+    //   return res.status(403).json({ error: 'Access denied' });
+    // }
 
     // Get the file key (S3 path) from the document record
     const fileKey = document.filePath;
