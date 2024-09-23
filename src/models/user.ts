@@ -146,6 +146,22 @@ export class UserModel {
     return true;
   }
 
+  /**
+   * Updates a user's password in the database.
+   *
+   * @param email - The email of the user whose password is being updated.
+   * @param newPassword - The new plain text password to hash and store.
+   * @returns The updated user object.
+   * @throws UserNotFoundError if the email does not exist.
+   */
+  async updatePassword(email: string, newPassword: string): Promise<User> {
+    const password_digest = hashPassword(newPassword);
+    const sql = `UPDATE users SET password_digest = $1 WHERE email = $2 RETURNING *`;
+    const result = await connectionSQLResult(sql, [password_digest, email]);
+    if (result.rows.length === 0) throw new UserNotFoundError(email);
+    return result.rows[0];
+  }
+
   // /**
   //  * Updates a user's data in the database.
   //  *

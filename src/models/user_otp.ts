@@ -37,7 +37,11 @@ export class UserOTPModel {
    * @param email - The email address to generate the OTP for.
    * @returns The generated OTP code.
    */
-  async generateOTP(email: string): Promise<string> {
+  async generateOTP(
+    email: string,
+    emailSubject: string,
+    emailMessage: string
+  ): Promise<string> {
     const otpCode = crypto.randomInt(100000, 999999).toString(); // 6-digit OTP
     const expiresAt = new Date(Date.now() + 10 * 60000).toISOString(); // Expires in 10 minutes
 
@@ -53,7 +57,7 @@ export class UserOTPModel {
     const result = await connectionSQLResult(sql, [email, otpCode, expiresAt]);
 
     // Send OTP via email
-    await this.sendOTPEmail(email, otpCode);
+    await this.sendOTPEmail(email, otpCode, emailSubject, emailMessage);
 
     return result.rows[0].otp_code;
   }
@@ -64,7 +68,12 @@ export class UserOTPModel {
    * @param email - The recipient's email address.
    * @param otpCode - The OTP code to send.
    */
-  private async sendOTPEmail(email: string, otpCode: string): Promise<void> {
+  private async sendOTPEmail(
+    email: string,
+    otpCode: string,
+    emailSubject: string,
+    emailMessage: string
+  ): Promise<void> {
     // Create a transporter using your SMTP service
     const transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST, // e.g., smtp.gmail.com
@@ -80,8 +89,11 @@ export class UserOTPModel {
     await transporter.sendMail({
       from: process.env.SMTP_USER, // Sender address (your email)
       to: email, // Recipient email
-      subject: 'Your OTP Code', // Subject line
-      text: `Your OTP code is ${otpCode}. It is valid for 10 minutes.`, // Plain text body
+      subject: emailSubject,
+      text:
+        emailMessage +
+        '\n' +
+        `Your OTP code is ${otpCode}. It is valid for 10 minutes.`, // Plain text body
     });
   }
 
