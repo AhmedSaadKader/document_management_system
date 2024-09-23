@@ -5,6 +5,8 @@ import {
   loginUser,
   registerUser,
   getUserData,
+  requestReset,
+  resetPassword,
 } from '../controllers/user_controllers';
 import auth from '../middleware/auth';
 
@@ -45,6 +47,12 @@ router.post('/register', registerUser);
  * @returns {Error} 500 - Internal server error
  */
 router.post('/login', loginUser);
+
+// Request a password reset
+router.post('/request-reset', requestReset);
+
+// Reset the password
+router.post('/reset-password', resetPassword);
 
 router.use(auth);
 

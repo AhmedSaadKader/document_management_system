@@ -7,8 +7,10 @@ import {
   UserNotFoundError,
 } from '../middleware/error_handler';
 import { RequestAuth } from '../../types';
+import { UserOTPModel } from '../models/user_otp';
 
 const user = new UserModel();
+const userOtp = new UserOTPModel();
 
 /**
  * Fetch all users from the database.
@@ -163,6 +165,67 @@ export const deleteUser = async (
     }
     const deletedUser = await user.delete(req.params.email);
     res.json(deletedUser);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const requestReset = async (
+  req: RequestAuth,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { email } = req.body;
+
+    const userEmailExists = await user.emailExists(email);
+    if (!userEmailExists) throw new UserNotFoundError(email);
+
+    // Generate OTP for password reset
+    const otpCode = await userOtp.generateOTP(
+      email,
+      'DMS-Atos: Reset Password OTP',
+      'Please use this OTP to reset password with:'
+    );
+
+    res.status(200).json({
+      message: 'Password reset link has been sent to your email.',
+      otpCode,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const resetPassword = async (
+  req: RequestAuth,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { email, otp, password } = req.body;
+
+    // Verify the OTP
+    if (!otp) {
+      throw new Error('Please provide OTP');
+    }
+    const isValidOtp = await userOtp.verifyOTP(email, otp);
+    if (!isValidOtp) {
+      res.status(400).json({ message: 'Invalid OTP' });
+      return;
+    }
+
+    // Update the user's password
+    const updatedUser = await user.updatePassword(email, password);
+
+    res.status(200).json({
+      message: 'Password has been successfully reset.',
+      user: {
+        email: updatedUser.email,
+        first_name: updatedUser.first_name,
+        last_name: updatedUser.last_name,
+      },
+    });
   } catch (error) {
     next(error);
   }

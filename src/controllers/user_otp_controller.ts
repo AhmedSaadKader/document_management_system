@@ -21,7 +21,11 @@ export const generateOTP = async (
       return res.status(400).json({ error: 'Email already exists' });
     }
 
-    const otpCode = await userOTPModel.generateOTP(email as string);
+    const otpCode = await userOTPModel.generateOTP(
+      email as string,
+      'DMS-Atos: Sign Up OTP',
+      'Please use this OTP to register with:'
+    );
     res.status(200).json({ message: 'OTP sent to email', otp: otpCode });
   } catch (error) {
     next(error);
