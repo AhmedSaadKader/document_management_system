@@ -277,11 +277,6 @@ export const filterDocuments = async (
     next(new DatabaseConnectionError((err as Error).message));
   }
 };
-import { Request, Response, NextFunction } from 'express';
-import mime from 'mime-types';
-import { DocumentModel } from './models/Document'; // Replace with actual import
-import { readFile } from './utils/s3'; // Replace with actual S3 reading function
-import { RequestAuth } from './types/RequestAuth'; // Custom Request type
 
 /**
  * Preview a document by converting it to a base64 string or streaming for audio/video files.
