@@ -277,16 +277,20 @@ export const filterDocuments = async (
     next(new DatabaseConnectionError((err as Error).message));
   }
 };
+import { Request, Response, NextFunction } from 'express';
+import mime from 'mime-types';
+import { DocumentModel } from './models/Document'; // Replace with actual import
+import { readFile } from './utils/s3'; // Replace with actual S3 reading function
+import { RequestAuth } from './types/RequestAuth'; // Custom Request type
 
 /**
- * Preview a document by converting it to a base64 string.
+ * Preview a document by converting it to a base64 string or streaming for audio/video files.
  *
  * @param req - The request object containing the authenticated user's information and document ID in the URL parameters.
  * @param res - The response object.
  * @param next - The next middleware for error handling.
- * @returns A base64-encoded string of the document file.
+ * @returns A base64-encoded string or stream of the document file.
  */
-
 export const previewDocument = async (
   req: RequestAuth,
   res: Response,
@@ -303,11 +307,6 @@ export const previewDocument = async (
       return res.status(404).json({ message: 'Document not found' });
     }
 
-    // Check if the authenticated user is allowed to preview the document
-    // if (document.userId.toString() !== req.user!.national_id) {
-    //   return res.status(403).json({ error: 'Access denied' });
-    // }
-
     // Get the file key (S3 path) from the document record
     const fileKey = document.filePath;
 
@@ -321,33 +320,50 @@ export const previewDocument = async (
     // Determine the content type based on the file extension
     const contentType = mime.lookup(fileKey) || 'application/octet-stream';
 
-    // Handle file types accordingly
-    if (Body instanceof Readable) {
-      // Handle readable streams (PDFs, text files, etc.)
-      const base64Data = await streamToString(Body);
+    // If the file is audio or video, stream it
+    if (contentType.startsWith('audio/') || contentType.startsWith('video/')) {
+      // Set headers for streaming the file
+      res.setHeader('Content-Type', contentType);
+      res.setHeader(
+        'Content-Disposition',
+        `inline; filename="${document.originalFileName}"`
+      );
 
-      return res.json({
-        base64: base64Data,
-        fileType: contentType, // Send MIME type to the client
-      });
-    } else if (Body instanceof Blob) {
-      // Handle Blob for different environments (if applicable)
-      const arrayBuffer = await Body.arrayBuffer();
-      const base64Data = Buffer.from(arrayBuffer).toString('base64');
-
-      return res.json({
-        base64: base64Data,
-        fileType: contentType, // Send MIME type to the client
-      });
+      // Stream the file directly to the response
+      if (Body instanceof Readable) {
+        Body.pipe(res);
+      } else {
+        return res
+          .status(500)
+          .json({ message: 'Unsupported Body type for streaming' });
+      }
     } else {
-      return res.status(500).json({ message: 'Unsupported Body type' });
+      // Handle non-audio/video files by returning base64
+      if (Body instanceof Readable) {
+        const base64Data = await streamToString(Body);
+
+        return res.json({
+          base64: base64Data,
+          fileType: contentType, // Send MIME type to the client
+        });
+      } else if (Body instanceof Blob) {
+        // Handle Blob for different environments (if applicable)
+        const arrayBuffer = await Body.arrayBuffer();
+        const base64Data = Buffer.from(arrayBuffer).toString('base64');
+
+        return res.json({
+          base64: base64Data,
+          fileType: contentType, // Send MIME type to the client
+        });
+      } else {
+        return res.status(500).json({ message: 'Unsupported Body type' });
+      }
     }
   } catch (err) {
     next(new Error((err as Error).message));
   }
 };
 
-// Uncomment the following sections if S3 upload functionality is needed
 export const s3UploadMiddleware = async (
   req: RequestAuth,
   res: Response,
