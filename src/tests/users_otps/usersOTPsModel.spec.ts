@@ -38,7 +38,7 @@ describe('UserOTP Model Unit Tests', () => {
     const email = 'asa.next@gmail.com';
 
     // Generate an OTP
-    const otpCode = await userOTPModel.generateOTP(email);
+    const otpCode = await userOTPModel.generateOTP(email, 'OTP', 'OTP message');
     expect(otpCode).toHaveLength(6);
 
     // Verify the OTP
