@@ -16,6 +16,7 @@ import {
 } from '../utils/s3_utils';
 import fs from 'fs';
 import { Readable } from 'stream';
+import mime from 'mime';
 
 /**
  * Get the details of a document by its ID.
@@ -317,15 +318,27 @@ export const previewDocument = async (
       return res.status(404).json({ message: 'File not found in S3' });
     }
 
-    // If Body is a Readable stream (Node.js environment), convert it to a Base64 string
+    // Determine the content type based on the file extension
+    const contentType = mime.lookup(fileKey) || 'application/octet-stream';
+
+    // Handle file types accordingly
     if (Body instanceof Readable) {
+      // Handle readable streams (PDFs, text files, etc.)
       const base64Data = await streamToString(Body);
-      return res.json({ base64: base64Data });
+
+      return res.json({
+        base64: base64Data,
+        fileType: contentType, // Send MIME type to the client
+      });
     } else if (Body instanceof Blob) {
-      // Handle Blob case (for environments where Body is a Blob)
+      // Handle Blob for different environments (if applicable)
       const arrayBuffer = await Body.arrayBuffer();
       const base64Data = Buffer.from(arrayBuffer).toString('base64');
-      return res.json({ base64: base64Data });
+
+      return res.json({
+        base64: base64Data,
+        fileType: contentType, // Send MIME type to the client
+      });
     } else {
       return res.status(500).json({ message: 'Unsupported Body type' });
     }

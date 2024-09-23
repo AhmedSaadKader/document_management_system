@@ -106,7 +106,7 @@ export const getFavorites = async (
     // Filter out null values from the populated results
     const validFavorites = favorites
       .map((fav) => fav.workspaceId)
-      .filter((workspace) => workspace !== null); // Ensures you only get valid workspaces
+      .filter((workspace) => workspace !== null);
 
     res.status(200).json(validFavorites);
   } catch (error) {
