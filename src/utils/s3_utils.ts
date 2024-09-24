@@ -20,7 +20,7 @@ export const createBucket = async (bucketName: string) => {
     await s3Client.send(new CreateBucketCommand({ Bucket: bucketName }));
     console.log(`Bucket created: ${bucketName}`);
   } catch (error) {
-    console.log((error as Error).message);
+    console.error((error as Error).message);
   }
 };
 

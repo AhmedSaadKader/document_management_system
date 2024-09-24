@@ -313,7 +313,7 @@ export const previewDocument = async (
     }
 
     // Determine the content type based on the file extension
-    const contentType = mime.lookup(fileKey) || 'application/octet-stream';
+    const contentType = document.fileType;
 
     // If the file is audio or video, stream it
     if (contentType.startsWith('audio/') || contentType.startsWith('video/')) {
@@ -339,7 +339,6 @@ export const previewDocument = async (
 
         return res.json({
           base64: base64Data,
-          fileType: contentType, // Send MIME type to the client
         });
       } else if (Body instanceof Blob) {
         // Handle Blob for different environments (if applicable)
@@ -348,7 +347,7 @@ export const previewDocument = async (
 
         return res.json({
           base64: base64Data,
-          fileType: contentType, // Send MIME type to the client
+          fileType: document.fileType,
         });
       } else {
         return res.status(500).json({ message: 'Unsupported Body type' });
