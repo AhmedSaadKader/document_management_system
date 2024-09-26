@@ -1,5 +1,5 @@
 {
-  "name": "document_management_system",
+  "name": "@ahmed89saad/document_management_system",
   "version": "1.0.0",
   "description": "MERN stack Document Management System with integrated relational and NoSQL databases.",
   "main": "app.js",
