@@ -16,7 +16,6 @@ import {
 } from '../utils/s3_utils';
 import fs from 'fs';
 import { Readable } from 'stream';
-import mime from 'mime';
 
 /**
  * Get the details of a document by its ID.
