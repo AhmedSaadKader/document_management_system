@@ -25,14 +25,31 @@ export const getAllWorkspaces = async (
   next: NextFunction
 ) => {
   try {
+    const { page = 1, limit = 10 } = req.query;
+
+    const skip = (parseInt(page as string) - 1) * parseInt(limit as string);
+    const totalWorkspaces = await Workspace.countDocuments({
+      userId: req.user!.national_id,
+      deleted: false,
+    });
+
     const workspaces = await Workspace.find({
       userId: req.user!.national_id,
       deleted: false,
-    }).populate({
-      path: 'documents',
-      match: { deleted: { $not: { $eq: true } } },
+    })
+      .populate({
+        path: 'documents',
+        match: { deleted: { $not: { $eq: true } } },
+      })
+      .skip(skip)
+      .limit(parseInt(limit as string));
+
+    res.json({
+      workspaces,
+      currentPage: parseInt(page as string),
+      totalPages: Math.ceil(totalWorkspaces / parseInt(limit as string)),
+      totalWorkspaces,
     });
-    res.json(workspaces);
   } catch (err) {
     next(new Error((err as Error).message));
   }
@@ -59,13 +76,16 @@ export const getAllWorkspaces = async (
  * @returns {Promise<void>} - Returns a JSON response containing the sorted public workspaces.
  * @throws {Error} - Passes any errors to the next middleware for error handling.
  */
-
 export const getPublicWorkspaces = async (
   req: RequestAuth,
   res: Response,
   next: NextFunction
 ): Promise<void> => {
   try {
+    const page = parseInt(req.query.page as string) || 1; // Default to page 1
+    const limit = parseInt(req.query.limit as string) || 5; // Default limit to 5
+    const skip = (page - 1) * limit; // Skip items for pagination
+
     const workspaces = await Workspace.aggregate([
       // Match only public workspaces
       {
@@ -96,9 +116,24 @@ export const getPublicWorkspaces = async (
           createdAt: -1, // Descending order of creation date if favorites are equal
         },
       },
+      // Skip for pagination
+      { $skip: skip },
+      // Limit for pagination
+      { $limit: limit },
     ]);
 
-    res.json(workspaces);
+    // Count total documents for pagination metadata
+    const totalWorkspaces = await Workspace.countDocuments({
+      isPublic: true,
+      deleted: { $not: { $eq: true } },
+    });
+
+    res.json({
+      workspaces,
+      totalPages: Math.ceil(totalWorkspaces / limit),
+      currentPage: page,
+      totalWorkspaces,
+    });
   } catch (err) {
     next(new Error((err as Error).message));
   }

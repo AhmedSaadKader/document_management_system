@@ -252,7 +252,7 @@ export const filterDocuments = async (
 ) => {
   try {
     const userId = req.user!.national_id;
-    const { search, sortBy, order = 'asc' } = req.query;
+    const { search, sortBy, order = 'asc', page = 1, limit = 10 } = req.query;
 
     let query = DocumentModel.find({ userId: userId, deleted: false });
 
@@ -269,9 +269,22 @@ export const filterDocuments = async (
       query = query.sort({ [sortBy as string]: sortOrder });
     }
 
+    // Pagination
+    const skip = (parseInt(page as string) - 1) * parseInt(limit as string);
+    const totalDocuments = await DocumentModel.countDocuments({
+      userId: userId,
+      deleted: false,
+    });
+    query = query.skip(skip).limit(parseInt(limit as string));
+
     const documents = await query.exec();
 
-    res.json(documents);
+    res.json({
+      documents,
+      currentPage: parseInt(page as string),
+      totalPages: Math.ceil(totalDocuments / parseInt(limit as string)),
+      totalDocuments,
+    });
   } catch (err) {
     next(new DatabaseConnectionError((err as Error).message));
   }
