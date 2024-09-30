@@ -1,0 +1,188 @@
+openapi: 3.0.0
+info:
+  title: Document Management System API
+  version: 1.0.0
+  description: This API provides endpoints for managing users, documents, workspaces, and favorites.
+  contact:
+    name: Ahmed Saad/NA
+    email: ahmed.saad.kader@gmail.com
+servers:
+  - url: https://documentmanagementsystem-production.up.railway.app/api/v1
+tags:
+  - name: users
+
+paths:
+  /users:
+    get:
+      summary: Retrieve all users
+      description: Fetches a list of all registered users.
+      operationId: getUsers
+      tags:
+        - users
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+        '500':
+          description: Internal server error
+    post:
+      summary: Register a new user
+      description: Creates a new user account.
+      operationId: createUsers
+      tags:
+        - users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserData'
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Bad request, validation errors
+        '500':
+          description: Internal server error
+  /users/login:
+    post:
+      summary: Login a user
+      description: Authenticates a user and returns an access token.
+      operationId: loginUser
+      tags:
+        - users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginData'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized, invalid credentials
+        '500':
+          description: Internal server error
+  /users/request-reset:
+    post:
+      summary: Request a password reset
+      description: Sends a password reset email to the specified user.
+      operationId: requestPasswordReset
+      tags:
+        - users
+      responses:
+        '200':
+          description: Success message
+        '500':
+          description: Internal server error
+  /users/reset-password:
+    post:
+      summary: Reset the password
+      description: Resets the password for a user using a reset token.
+      operationId: resetPassword
+      tags:
+        - users
+      responses:
+        '200':
+          description: Success message
+        '500':
+          description: Internal server error
+  /users/{email}:
+    get:
+      summary: Retrieve user data by email
+      description: Fetches user data based on the provided email address.
+      operationId: retrieveUserData
+      tags:
+        - users
+      parameters:
+        - name: email
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          description: User not found
+        '500':
+          description: Internal server error
+    delete:
+      summary: Delete a user by email
+      description: Deletes a user account based on the provided email address.
+      operationId: deleteUser
+      tags:
+        - users
+      parameters:
+        - name: email
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success message
+        '404':
+          description: User not found
+        '500':
+          description: Internal server error
+
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        national_id:
+          type: string
+        first_name:
+          type: string
+        last_name:
+          type: string
+        email:
+          type: string
+        password_digest:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    UserData:
+      type: object
+      properties:
+        national_id:
+          type: string
+        first_name:
+          type: string
+        last_name:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+    LoginData:
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
