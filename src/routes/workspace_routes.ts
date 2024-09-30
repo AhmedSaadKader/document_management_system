@@ -19,10 +19,8 @@ import {
 } from '../controllers/workspace_controller';
 import auth from '../middleware/auth';
 import { uploadFileMiddleware } from '../utils/file_upload_utils';
-import {
-  filterDocuments,
-  s3UploadMiddleware,
-} from '../controllers/document_controller';
+import { filterDocuments } from '../controllers/document_controller';
+import { s3UploadMiddleware } from '../middleware/s3_upload';
 
 const router = Router();
 
