@@ -32,6 +32,8 @@ const favoriteSchema = new mongoose.Schema({
   favoritedAt: { type: Date, default: Date.now },
 });
 
+favoriteSchema.index({ userId: 1, workspaceId: 1 }, { unique: true });
+
 /**
  * @constant {mongoose.Model} Favorite - The Mongoose model for the Favorite schema.
  * @description Used to interact with the Favorites collection in the database.
