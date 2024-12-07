@@ -100,7 +100,7 @@ export class UserOTPModel {
   async verifyOTP(email: string, otpCode: string): Promise<boolean> {
     const sql = `
     SELECT * FROM users_otps
-    WHERE email = $1 AND otp_code = $2 AND used = FALSE AND expires_at > NOW()
+    WHERE email = $1 AND otp_code = $2 AND used = FALSE AND expires_at > NOW()  AT TIME ZONE 'UTC'
     `;
     const result = await connectionSQLResult(sql, [email, otpCode]);
 

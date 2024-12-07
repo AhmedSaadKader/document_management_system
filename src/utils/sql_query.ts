@@ -26,8 +26,14 @@ export const connectionSQLResult = async (
   sqlQuery: string,
   sqlParams: (string | number | Date | null)[]
 ) => {
-  const conn = await sqlClient.connect();
+  let conn;
   try {
+    conn = await sqlClient.connect();
+  } catch (error) {
+    throw new DatabaseConnectionError(error as string);
+  }
+  try {
+    const conn = await sqlClient.connect();
     // Execute the query
     const result = await conn.query(sqlQuery, [...sqlParams]);
 
@@ -38,6 +44,6 @@ export const connectionSQLResult = async (
     throw new DatabaseConnectionError(err as string);
   } finally {
     // Ensure the connection is released
-    conn.release();
+    if (conn) conn.release();
   }
 };
