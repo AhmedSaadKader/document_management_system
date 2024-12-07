@@ -169,6 +169,14 @@ export const getWorkspaceById = async (
           sort: sortBy ? { [sortBy as string]: sortOrder } : {},
         },
       })
+      .populate({
+        path: 'childWorkspaces',
+        match: { deleted: false },
+      })
+      .populate({
+        path: 'parentWorkspace',
+        match: { deleted: false },
+      })
       .exec();
 
     if (!workspace) {
@@ -185,7 +193,12 @@ export const getWorkspaceById = async (
       role = workspace.isUserEditorOrViewer(userEmail);
     }
 
-    res.json({ workspace, role });
+    res.json({
+      workspace,
+      role,
+      childWorkspaces: workspace.childWorkspaces || [],
+      parentWorkspace: workspace.parentWorkspace || null,
+    });
   } catch (err) {
     next(new DatabaseConnectionError((err as Error).message));
   }
@@ -203,7 +216,7 @@ export const createWorkspace = async (
   res: Response,
   next: NextFunction
 ) => {
-  const { workspaceName, description, isPublic } = req.body;
+  const { workspaceName, description, isPublic, parentWorkspaceId } = req.body;
 
   try {
     const workspace = new Workspace({
@@ -212,10 +225,162 @@ export const createWorkspace = async (
       isPublic,
       userId: req.user!.national_id,
       userEmail: req.user!.email,
+      parentWorkspace: parentWorkspaceId || null,
     });
+
+    // If parent workspace is specified, add this workspace as a child
+    if (parentWorkspaceId) {
+      const parentWorkspace = await Workspace.findById(parentWorkspaceId);
+      if (!parentWorkspace) {
+        return res.status(404).json({ message: 'Parent workspace not found' });
+      }
+
+      // Ensure the user has permission to create child workspaces
+      const userRole = parentWorkspace.isUserEditorOrViewer(req.user!.email);
+      if (
+        userRole !== 'editor' &&
+        parentWorkspace.userId !== req.user!.national_id
+      ) {
+        return res.status(403).json({
+          message:
+            'Not authorized to create child workspaces in this workspace',
+        });
+      }
+
+      await parentWorkspace.addChildWorkspace(workspace._id);
+    }
     await workspace.save();
 
     res.status(201).json(workspace);
+  } catch (err) {
+    next(new Error((err as Error).message));
+  }
+};
+
+/**
+ * @description Add a child workspace to an existing workspace
+ * @param {RequestAuth} req - The request object
+ * @param {Response} res - The response object
+ * @param {NextFunction} next - The next middleware function
+ * @returns {void}
+ */
+export const addChildWorkspace = async (
+  req: RequestAuth,
+  res: Response,
+  next: NextFunction
+) => {
+  const { workspaceId } = req.params;
+  const { childWorkspaceId } = req.body;
+
+  try {
+    const parentWorkspace = await Workspace.findById(workspaceId);
+    const childWorkspace = await Workspace.findById(childWorkspaceId);
+
+    if (!parentWorkspace) {
+      return next(new NotFoundError('Parent workspace not found'));
+    }
+
+    if (!childWorkspace) {
+      return next(new NotFoundError('Child workspace not found'));
+    }
+
+    // Check user permissions
+    const userRole = parentWorkspace.isUserEditorOrViewer(req.user!.email);
+    if (
+      userRole !== 'editor' &&
+      parentWorkspace.userId !== req.user!.national_id
+    ) {
+      return res.status(403).json({
+        message: 'Only owners and editors can add child workspaces',
+      });
+    }
+
+    // Add child workspace
+    await parentWorkspace.addChildWorkspace(childWorkspaceId);
+
+    res.status(200).json({
+      message: 'Child workspace added successfully',
+      parentWorkspace,
+    });
+  } catch (err) {
+    next(new Error((err as Error).message));
+  }
+};
+
+/**
+ * @description Remove a child workspace from a parent workspace
+ * @param {RequestAuth} req - The request object
+ * @param {Response} res - The response object
+ * @param {NextFunction} next - The next middleware function
+ * @returns {void}
+ */
+export const removeChildWorkspace = async (
+  req: RequestAuth,
+  res: Response,
+  next: NextFunction
+) => {
+  const { workspaceId, childWorkspaceId } = req.params;
+
+  try {
+    const parentWorkspace = await Workspace.findById(workspaceId);
+    const childWorkspace = await Workspace.findById(childWorkspaceId);
+
+    if (!parentWorkspace) {
+      return next(new NotFoundError('Parent workspace not found'));
+    }
+
+    if (!childWorkspace) {
+      return next(new NotFoundError('Child workspace not found'));
+    }
+
+    // Check user permissions
+    const userRole = parentWorkspace.isUserEditorOrViewer(req.user!.email);
+    if (
+      userRole !== 'editor' &&
+      parentWorkspace.userId !== req.user!.national_id
+    ) {
+      return res.status(403).json({
+        message: 'Only owners and editors can remove child workspaces',
+      });
+    }
+
+    // Remove child workspace
+    await parentWorkspace.removeChildWorkspace(childWorkspaceId);
+
+    res.status(200).json({
+      message: 'Child workspace removed successfully',
+      parentWorkspace,
+    });
+  } catch (err) {
+    next(new Error((err as Error).message));
+  }
+};
+
+/**
+ * @description Retrieve all child workspaces for a given workspace
+ * @param {RequestAuth} req - The request object
+ * @param {Response} res - The response object
+ * @param {NextFunction} next - The next middleware function
+ * @returns {void}
+ */
+export const getChildWorkspaces = async (
+  req: RequestAuth,
+  res: Response,
+  next: NextFunction
+) => {
+  const { workspaceId } = req.params;
+
+  try {
+    const workspace = await Workspace.findById(workspaceId).populate({
+      path: 'childWorkspaces',
+      match: { deleted: false },
+    });
+
+    if (!workspace) {
+      return next(new NotFoundError('Workspace not found'));
+    }
+
+    res.status(200).json(workspace.childWorkspaces || []);
   } catch (err) {
     next(new Error((err as Error).message));
   }

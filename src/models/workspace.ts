@@ -23,6 +23,8 @@ export interface Permission {
  * @property {string} description - The description of the workspace.
  * @property {string} userId - The ID of the user who owns the workspace.
  * @property {string} userEmail - The email of the user who owns the workspace.
+ * @property {mongoose.Types.ObjectId} parentWorkspace - Optional reference to parent workspace
+ * @property {mongoose.Types.ObjectId[]} childWorkspaces - Array of child workspace references
  * @property {mongoose.Types.ObjectId[]} documents - An array of document IDs associated with the workspace.
  * @property {Permission[]} permissions - An array of permissions assigned to users for the workspace.
  * @property {Date} createdAt - The date when the workspace was created.
@@ -41,16 +43,23 @@ export interface Permission {
  * @returns {'editor' | 'viewer' | null} - The permission level of the user ('editor' or 'viewer') or null if not found.
  */
 export interface WorkspaceInterface extends mongoose.Document {
+  _id: mongoose.Types.ObjectId;
   workspaceName: string;
   description?: string;
   userId: string;
   userEmail: string;
   isPublic: boolean;
+  parentWorkspace?: mongoose.Types.ObjectId;
+  childWorkspaces: mongoose.Types.ObjectId[];
   documents: mongoose.Types.ObjectId[];
   permissions: Permission[];
   createdAt: Date;
   updatedAt: Date;
   deleted: boolean;
+  addChildWorkspace(
+    childWorkspaceId: mongoose.Types.ObjectId
+  ): Promise<WorkspaceInterface>;
+  removeChildWorkspace(childWorkspaceId: string): Promise<WorkspaceInterface>;
   addDocument(documentId: mongoose.Types.ObjectId): Promise<WorkspaceInterface>;
   removeDocument(documentId: string): Promise<WorkspaceInterface>;
   addUserAsEditor(email: string): Promise<WorkspaceInterface>;
@@ -78,6 +87,17 @@ const workspaceSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  parentWorkspace: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Workspaces',
+    default: null,
+  },
+  childWorkspaces: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Workspaces',
+    },
+  ],
   documents: [
     {
       type: mongoose.Schema.Types.ObjectId,
@@ -106,6 +126,65 @@ const workspaceSchema = new mongoose.Schema({
     default: Date.now,
   },
   deleted: { type: Boolean, default: false },
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true },
+});
+
+workspaceSchema.methods.addChildWorkspace = async function (
+  this: WorkspaceInterface,
+  childWorkspaceId: mongoose.Types.ObjectId
+): Promise<WorkspaceInterface> {
+  if (this._id.equals(childWorkspaceId)) {
+    throw new Error('Cannot add workspace as its own child');
+  }
+
+  if (!this.childWorkspaces.some((id) => id.equals(childWorkspaceId))) {
+    this.childWorkspaces.push(childWorkspaceId);
+
+    // Update the child workspace's parent
+    await mongoose
+      .model('Workspaces')
+      .findByIdAndUpdate(childWorkspaceId, { parentWorkspace: this._id });
+
+    await this.save();
+  }
+
+  return this;
+};
+
+workspaceSchema.methods.removeChildWorkspace = async function (
+  this: WorkspaceInterface,
+  childWorkspaceId: string
+): Promise<WorkspaceInterface> {
+  // Remove the child workspace reference
+  this.childWorkspaces = this.childWorkspaces.filter(
+    (id) => !id.equals(childWorkspaceId)
+  );
+
+  // Clear the parent reference in the child workspace
+  await mongoose
+    .model('Workspaces')
+    .findByIdAndUpdate(childWorkspaceId, { parentWorkspace: null });
+
+  await this.save();
+  return this;
+};
+
+// Create virtual to populate child workspaces
+workspaceSchema.virtual('populatedChildWorkspaces', {
+  ref: 'Workspaces',
+  localField: 'childWorkspaces',
+  foreignField: '_id',
+});
+
+workspaceSchema.pre('save', async function (next) {
+  // If this workspace is deleted, optionally soft delete all child workspaces
+  if (this.deleted && this.childWorkspaces.length > 0) {
+    await mongoose
+      .model('Workspaces')
+      .updateMany({ _id: { $in: this.childWorkspaces } }, { deleted: true });
+  }
+  next();
 });
 
 /**

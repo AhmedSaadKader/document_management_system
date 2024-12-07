@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 
 type UserPayload = {
   national_id?: string;
-  email?: string;
+  email: string;
   iat?: string | number;
 };
 
@@ -28,5 +28,7 @@ export interface RequestAuth extends Request {
     last_name: string;
     file?: File;
     isPublic: boolean;
+    parentWorkspaceId: mongoose.Types.ObjectId;
+    childWorkspaceId: mongoose.Types.ObjectId;
   };
 }

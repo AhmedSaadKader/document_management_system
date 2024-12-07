@@ -16,6 +16,9 @@ import {
   permanentlyDeleteWorkspace,
   fetchDeletedWorkspaces,
   restoreWorkspace,
+  addChildWorkspace,
+  getChildWorkspaces,
+  removeChildWorkspace,
 } from '../controllers/workspace_controller';
 import auth from '../middleware/auth';
 import { uploadFileMiddleware } from '../utils/file_upload_utils';
@@ -59,6 +62,12 @@ router.delete('/:workspaceId/permanent-delete', permanentlyDeleteWorkspace);
 // Route to restore a soft-deleted workspace
 router.put('/:workspaceId/restore', restoreWorkspace);
 
+router.post('/:workspaceId/children', addChildWorkspace);
+
+router.delete('/:workspaceId/children/:childWorkspaceId', removeChildWorkspace);
+
+router.get('/:workspaceId/children', getChildWorkspaces);
+
 router.post(
   '/:workspaceId/documents',
   uploadFileMiddleware,
@@ -70,16 +79,6 @@ router.delete(
   '/:workspaceId/documents/:documentId',
   deleteDocumentFromWorkspace
 );
-
-// router.get(
-//   '/:workspaceId/documents/:documentId/download',
-//   downloadDocumentFromWorkspace
-// );
-
-// router.get(
-//   '/:workspaceId/documents/:documentId/view',
-//   viewDocumentFromWorkspace
-// );
 
 router.get('/:workspaceId/documents/filter', filterDocuments);
 
