@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 
 type UserPayload = {
   national_id?: string;
-  email: string;
+  email?: string;
   iat?: string | number;
 };
 

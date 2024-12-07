@@ -236,6 +236,9 @@ export const createWorkspace = async (
       }
 
       // Ensure the user has permission to create child workspaces
+      if (!req.user!.email)
+        return res.status(400).json({ message: 'User email is required' });
+
       const userRole = parentWorkspace.isUserEditorOrViewer(req.user!.email);
       if (
         userRole !== 'editor' &&
@@ -285,6 +288,8 @@ export const addChildWorkspace = async (
     }
 
     // Check user permissions
+    if (!req.user!.email)
+      return res.status(400).json({ message: 'User email is required' });
     const userRole = parentWorkspace.isUserEditorOrViewer(req.user!.email);
     if (
       userRole !== 'editor' &&
@@ -334,6 +339,8 @@ export const removeChildWorkspace = async (
     }
 
     // Check user permissions
+    if (!req.user!.email)
+      return res.status(400).json({ message: 'User email is required' });
     const userRole = parentWorkspace.isUserEditorOrViewer(req.user!.email);
     if (
       userRole !== 'editor' &&
