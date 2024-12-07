@@ -126,9 +126,10 @@ const workspaceSchema = new mongoose.Schema({
     default: Date.now,
   },
   deleted: { type: Boolean, default: false },
-  toJSON: { virtuals: true },
-  toObject: { virtuals: true },
 });
+
+workspaceSchema.set('toJSON', { virtuals: true });
+workspaceSchema.set('toObject', { virtuals: true });
 
 workspaceSchema.methods.addChildWorkspace = async function (
   this: WorkspaceInterface,
