@@ -11,24 +11,9 @@ import jwt from 'jsonwebtoken';
  * The payload includes the `id` and `email` provided as arguments.
  * Ensure that `TOKEN_SECRET` is a strong and secure key stored in your environment
  * variables for signing the JWT.
- *
- * Example usage:
- *
- * ```typescript
- * const token = createJWT(1, 'john_doe');
- * ```
  */
-export const createJWT = (
-  national_id: string,
-  email: string,
-  firstName: string,
-  lastName: string
-): string => {
-  return jwt.sign(
-    { national_id, email, firstName, lastName },
-    process.env.TOKEN_SECRET!,
-    {
-      expiresIn: '24h',
-    }
-  );
+export const createJWT = (national_id: string, email: string): string => {
+  return jwt.sign({ national_id, email }, process.env.TOKEN_SECRET!, {
+    expiresIn: '24h',
+  });
 };
