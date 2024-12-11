@@ -89,12 +89,7 @@ export const registerUser = async (
       email,
       password,
     });
-    const token = createJWT(
-      newUser.national_id,
-      newUser.email,
-      newUser.first_name,
-      newUser.last_name
-    );
+    const token = createJWT(newUser.national_id, newUser.email);
     res.json({
       token,
       email: newUser.email,
@@ -126,12 +121,7 @@ export const loginUser = async (
       throw new UserLoginError(email);
     }
     const createdUser = await user.authenticateUser(email, password);
-    const token = createJWT(
-      createdUser.national_id,
-      createdUser.email,
-      createdUser.first_name,
-      createdUser.last_name
-    );
+    const token = createJWT(createdUser.national_id, createdUser.email);
     res.json({
       token,
       email: createdUser.email,

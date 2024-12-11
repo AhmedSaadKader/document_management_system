@@ -28,12 +28,7 @@ describe('User Routes and Controllers', () => {
 
   beforeAll(async () => {
     userModel = new UserModel();
-    authToken = createJWT(
-      mockUser.national_id,
-      mockUser.email,
-      mockUser.first_name,
-      mockUser.last_name
-    );
+    authToken = createJWT(mockUser.national_id, mockUser.email);
   });
 
   beforeEach(async () => {

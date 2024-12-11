@@ -28,12 +28,7 @@ describe('Workspace Controllers', () => {
   let authToken: string;
 
   beforeAll(async () => {
-    authToken = createJWT(
-      mockUser.national_id,
-      mockUser.email,
-      mockUser.first_name,
-      mockUser.last_name
-    );
+    authToken = createJWT(mockUser.national_id, mockUser.email);
     mongoServer = await MongoMemoryServer.create();
     const uri = mongoServer.getUri();
     await mongoose.connect(uri);

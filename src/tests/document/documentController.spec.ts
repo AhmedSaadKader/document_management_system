@@ -39,12 +39,7 @@ describe('Document Controllers', () => {
   };
 
   beforeAll(async () => {
-    authToken = createJWT(
-      mockUser.national_id,
-      mockUser.email,
-      mockUser.first_name,
-      mockUser.last_name
-    );
+    authToken = createJWT(mockUser.national_id, mockUser.email);
     mongoServer = await MongoMemoryServer.create();
     const uri = mongoServer.getUri();
     await mongoose.connect(uri);
@@ -166,12 +161,7 @@ describe('Document Controllers', () => {
   });
 
   it('should return 403 if user is not authorized to view document', async () => {
-    const otherUserToken = createJWT(
-      'otherUserId',
-      'otheruser@example.com',
-      'Jane',
-      'Doe'
-    );
+    const otherUserToken = createJWT('otherUserId', 'otheruser@example.com');
     const response = await request(app)
       .get(`/api/v1/documents/${documentId}`)
       .set('Authorization', `Bearer ${otherUserToken}`)
