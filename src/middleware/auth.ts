@@ -1,5 +1,5 @@
 import { NextFunction, Response } from 'express';
-import jwt, { JwtPayload } from 'jsonwebtoken';
+import jwt, { JwtPayload, TokenExpiredError } from 'jsonwebtoken';
 import { RequestAuth } from '../../types/index';
 
 /**
@@ -20,19 +20,53 @@ const auth = async (
   next: NextFunction
 ): Promise<void> => {
   const authHeader = req.headers.authorization;
+
+  // Check if Authorization header exists and starts with Bearer
   if (!authHeader || !authHeader.startsWith('Bearer')) {
-    res.status(401).send('Authentication invalid');
+    res.status(401).json({
+      error: 'Authentication invalid',
+      message: 'No token provided or incorrect token format',
+    });
+    return;
   }
-  const token = authHeader?.split(' ')[1];
+
+  const token = authHeader.split(' ')[1];
+
   try {
-    const tokenVerified: object = jwt.verify(
-      token as string,
-      process.env.TOKEN_SECRET as string
+    // Verify the token with more detailed options
+    const tokenVerified = jwt.verify(
+      token,
+      process.env.TOKEN_SECRET as string,
+      {
+        // Optional: Add clock tolerance for minor time discrepancies
+        clockTolerance: 30,
+      }
     ) as JwtPayload;
+
+    // Attach user information to the request
     req.user = { ...tokenVerified };
     next();
   } catch (error) {
-    next(error);
+    // Specific handling for different JWT verification errors
+    if (error instanceof TokenExpiredError) {
+      res.status(401).json({
+        error: 'Token Expired',
+        message: 'Your session has expired. Please log in again.',
+        // Optionally include additional context
+        expiredAt: (error as TokenExpiredError).expiredAt,
+      });
+    } else if (error instanceof jwt.JsonWebTokenError) {
+      res.status(401).json({
+        error: 'Invalid Token',
+        message: 'The provided token is invalid.',
+      });
+    } else {
+      // Catch-all for any other unexpected errors
+      res.status(500).json({
+        error: 'Authentication Error',
+        message: 'An unexpected error occurred during authentication.',
+      });
+    }
   }
 };
 
