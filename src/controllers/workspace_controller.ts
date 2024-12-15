@@ -41,6 +41,14 @@ export const getAllWorkspaces = async (
         path: 'documents',
         match: { deleted: { $not: { $eq: true } } },
       })
+      .populate({
+        path: 'parentWorkspace',
+        match: { deleted: false },
+      })
+      .populate({
+        path: 'childWorkspaces',
+        match: { deleted: false },
+      })
       .skip(skip)
       .limit(parseInt(limit as string));
 
@@ -87,14 +95,28 @@ export const getPublicWorkspaces = async (
     const skip = (page - 1) * limit; // Skip items for pagination
 
     const workspaces = await Workspace.aggregate([
-      // Match only public workspaces
       {
         $match: {
           isPublic: true,
           deleted: { $not: { $eq: true } },
         },
       },
-      // Join with the Favorite collection
+      {
+        $lookup: {
+          from: 'workspaces',
+          localField: 'parentWorkspace',
+          foreignField: '_id',
+          as: 'parentWorkspace',
+        },
+      },
+      {
+        $lookup: {
+          from: 'workspaces',
+          localField: '_id',
+          foreignField: 'parentWorkspace',
+          as: 'childWorkspaces',
+        },
+      },
       {
         $lookup: {
           from: 'favorites',
@@ -103,26 +125,21 @@ export const getPublicWorkspaces = async (
           as: 'favorites',
         },
       },
-      // Add a new field 'favoritesCount' with the number of favorites
       {
         $addFields: {
           favoritesCount: { $size: '$favorites' },
         },
       },
-      // Sort first by favorites count (descending), then by createdAt (descending)
       {
         $sort: {
-          favoritesCount: -1, // Descending order of favorites count
-          createdAt: -1, // Descending order of creation date if favorites are equal
+          favoritesCount: -1,
+          createdAt: -1,
         },
       },
-      // Skip for pagination
       { $skip: skip },
-      // Limit for pagination
       { $limit: limit },
     ]);
 
-    // Count total documents for pagination metadata
     const totalWorkspaces = await Workspace.countDocuments({
       isPublic: true,
       deleted: { $not: { $eq: true } },
