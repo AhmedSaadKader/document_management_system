@@ -18,7 +18,7 @@ export interface RequestAuth extends Request {
     workspaceId?: mongoose.Types.ObjectId;
     workspaceName?: string;
     description?: string;
-    userId?: string;
+    user_id?: string;
     permission?: string;
     tags: string[];
     permissions: string;
