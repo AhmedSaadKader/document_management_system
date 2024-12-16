@@ -17,7 +17,7 @@ import { createJWT } from '../../utils/jwt_utils';
 describe('Document Controllers', () => {
   let mongoServer: MongoMemoryServer;
   const mockUser = {
-    national_id: '12345',
+    user_id: '12345',
     first_name: 'John',
     last_name: 'Doe',
     email: 'user@example.com',
@@ -28,7 +28,7 @@ describe('Document Controllers', () => {
   let documentId: string;
 
   const baseDocument = {
-    userId: mockUser.national_id,
+    userId: mockUser.user_id,
     userEmail: mockUser.email,
     filePath: '/path/to/file',
     fileType: 'application/pdf',
@@ -39,7 +39,7 @@ describe('Document Controllers', () => {
   };
 
   beforeAll(async () => {
-    authToken = createJWT(mockUser.national_id, mockUser.email);
+    authToken = createJWT(mockUser.user_id, mockUser.email);
     mongoServer = await MongoMemoryServer.create();
     const uri = mongoServer.getUri();
     await mongoose.connect(uri);

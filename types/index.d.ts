@@ -2,7 +2,7 @@ import { Request } from 'express';
 import mongoose from 'mongoose';
 
 type UserPayload = {
-  national_id?: string;
+  user_id?: string;
   email?: string;
   iat?: string | number;
 };
@@ -18,11 +18,10 @@ export interface RequestAuth extends Request {
     workspaceId?: mongoose.Types.ObjectId;
     workspaceName?: string;
     description?: string;
-    userId?: string;
+    user_id?: string;
     permission?: string;
     tags: string[];
     permissions: string;
-    national_id: string;
     password: string;
     first_name: string;
     last_name: string;

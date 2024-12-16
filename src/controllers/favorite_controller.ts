@@ -16,7 +16,7 @@ export const addFavorite = async (
   res: Response,
   next: NextFunction
 ) => {
-  const userId = req.user!.national_id;
+  const userId = req.user!.user_id;
   const { workspaceId } = req.params;
 
   try {
@@ -59,7 +59,7 @@ export const removeFavorite = async (
   res: Response,
   next: NextFunction
 ) => {
-  const userId = req.user!.national_id;
+  const userId = req.user!.user_id;
   const { workspaceId } = req.params;
 
   try {
@@ -92,7 +92,7 @@ export const getFavorites = async (
   res: Response,
   next: NextFunction
 ) => {
-  const userId = req.user!.national_id;
+  const userId = req.user!.user_id;
 
   try {
     // Find all favorited workspaces by the user
@@ -127,7 +127,7 @@ export const checkIfFavorited = async (
   res: Response,
   next: NextFunction
 ) => {
-  const userId = req.user!.national_id;
+  const userId = req.user!.user_id;
   const { workspaceId } = req.params;
 
   try {
