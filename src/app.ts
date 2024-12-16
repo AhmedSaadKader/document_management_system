@@ -6,6 +6,7 @@ import documentRouter from './routes/document_routes';
 import workspaceRouter from './routes/workspace_routes';
 import favoriteRoutes from './routes/favorite_routes';
 import globalErrorHandler from './middleware/global_error_handler';
+import { initializeMongoDbDatabase } from './database';
 
 // Load environment variables from a .env file into process.env
 dotenv.config();
@@ -23,6 +24,8 @@ const apiVersion = '/api/v1';
 
 // Middleware to parse JSON request bodies
 app.use(express.json());
+
+initializeMongoDbDatabase();
 
 // Middleware to enable Cross-Origin Resource Sharing (CORS)
 if (process.env.ENV == 'production') {

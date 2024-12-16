@@ -32,14 +32,16 @@ export let sqlClient = new Pool({
   password: '',
 });
 
-// MongoDB connection setup
-if (ENV !== 'test') {
-  // Connect to MongoDB for development or production
-  mongoose
-    .connect(MONGODB_CONNECTION as string)
-    .then(() => console.log('MongoDB connected'))
-    .catch((err) => console.error('MongoDB connection error:', err));
-}
+export const initializeMongoDbDatabase = () => {
+  // MongoDB connection setup
+  if (ENV !== 'test') {
+    // Connect to MongoDB for development or production
+    mongoose
+      .connect(MONGODB_CONNECTION as string)
+      .then(() => console.log('MongoDB connected'))
+      .catch((err) => console.error('MongoDB connection error:', err));
+  }
+};
 
 // Configure the Pool based on the environment
 // Development environment
