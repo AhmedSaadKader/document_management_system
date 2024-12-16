@@ -29,12 +29,12 @@ export const getAllWorkspaces = async (
 
     const skip = (parseInt(page as string) - 1) * parseInt(limit as string);
     const totalWorkspaces = await Workspace.countDocuments({
-      userId: req.user!.user_id,
+      userEmail: req.user!.email,
       deleted: false,
     });
 
     const workspaces = await Workspace.find({
-      userId: req.user!.user_id,
+      userEmail: req.user!.email,
       deleted: false,
     })
       .populate({
@@ -153,7 +153,6 @@ export const getWorkspaceById = async (
   try {
     const { workspaceId } = req.params;
     const { search, sortBy, order = 'asc' } = req.query;
-    const userId = req.user!.user_id;
     const userEmail = req.user!.email;
     const sortOrder = order === 'desc' ? -1 : 1;
 
@@ -184,7 +183,7 @@ export const getWorkspaceById = async (
 
     let role: string | null = 'viewer';
 
-    if (userId == workspace.userId) {
+    if (userEmail == workspace.userEmail) {
       role = 'owner';
     }
 
@@ -234,7 +233,7 @@ export const createWorkspace = async (
       const userRole = parentWorkspace.isUserEditorOrViewer(req.user!.email);
       if (
         userRole !== 'editor' &&
-        parentWorkspace.userId !== req.user!.user_id
+        parentWorkspace.userEmail !== req.user!.email
       ) {
         return res.status(403).json({
           message:
@@ -276,7 +275,10 @@ export const addChildWorkspace = async (
     if (!req.user!.email)
       return res.status(400).json({ message: 'User email is required' });
     const userRole = parentWorkspace.isUserEditorOrViewer(req.user!.email);
-    if (userRole !== 'editor' && parentWorkspace.userId !== req.user!.user_id) {
+    if (
+      userRole !== 'editor' &&
+      parentWorkspace.userEmail !== req.user!.email
+    ) {
       return res.status(403).json({
         message: 'Only owners and editors can add child workspaces',
       });
@@ -317,7 +319,10 @@ export const removeChildWorkspace = async (
     if (!req.user!.email)
       return res.status(400).json({ message: 'User email is required' });
     const userRole = parentWorkspace.isUserEditorOrViewer(req.user!.email);
-    if (userRole !== 'editor' && parentWorkspace.userId !== req.user!.user_id) {
+    if (
+      userRole !== 'editor' &&
+      parentWorkspace.userEmail !== req.user!.email
+    ) {
       return res.status(403).json({
         message: 'Only owners and editors can remove child workspaces',
       });
@@ -379,7 +384,7 @@ export const updateWorkspace = async (
       return next(new NotFoundError('Workspace not found'));
     }
 
-    if (workspace.userId !== req.user!.user_id) {
+    if (workspace.userEmail !== req.user!.email) {
       return res
         .status(403)
         .json({ message: 'Not authorized to update this workspace' });
@@ -535,7 +540,7 @@ export const addDocumentToWorkspace = async (
     const newDocument = new Document({
       documentName: documentName || file.originalname,
       documentType,
-      userId: req.user!.user_id,
+      userId: req.user!.email,
       userEmail: req.user!.email,
       filePath: file.s3Key,
       originalFileName: file.originalname,
@@ -653,7 +658,7 @@ export const shareWorkspace = async (
     }
 
     const userRole = workspace.isUserEditorOrViewer(userEmail);
-    if (userRole !== 'editor' && userId !== workspace.userId) {
+    if (userRole !== 'editor' && userEmail !== workspace.userEmail) {
       return res.status(403).json({
         message: 'Only the owner or editors can share this workspace',
       });
@@ -715,9 +720,9 @@ export const getRecentWorkspaces = async (
   next: NextFunction
 ) => {
   try {
-    const userId = req.user!.user_id;
+    const userEmail = req.user!.email;
 
-    const recentWorkspaces = await Workspace.find({ userId })
+    const recentWorkspaces = await Workspace.find({ userEmail })
       .sort({ createdAt: -1 })
       .limit(5);
 

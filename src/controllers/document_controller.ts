@@ -70,7 +70,7 @@ export const recycleBin = async (
 ) => {
   try {
     const documents = await DocumentModel.find({
-      userId: req.user!.user_id,
+      userEmail: req.user!.email,
       deleted: true,
     });
     res.status(200).json(documents);
@@ -206,10 +206,10 @@ export const filterDocuments = async (
   next: NextFunction
 ) => {
   try {
-    const userId = req.user!.user_id;
+    const userEmail = req.user!.email;
     const { search, sortBy, order = 'asc', page = 1, limit = 10 } = req.query;
 
-    let query = DocumentModel.find({ userId: userId, deleted: false });
+    let query = DocumentModel.find({ userEmail: userEmail, deleted: false });
 
     // Search by document name
     if (search) {
@@ -227,7 +227,7 @@ export const filterDocuments = async (
     // Pagination
     const skip = (parseInt(page as string) - 1) * parseInt(limit as string);
     const totalDocuments = await DocumentModel.countDocuments({
-      userId: userId,
+      userEmail: userEmail,
       deleted: false,
     });
     query = query.skip(skip).limit(parseInt(limit as string));

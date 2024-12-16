@@ -1,12 +1,12 @@
 import express, { Request, Response } from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
-import userRouter from './routes/user_routes';
 import documentRouter from './routes/document_routes';
 import workspaceRouter from './routes/workspace_routes';
 import favoriteRoutes from './routes/favorite_routes';
 import globalErrorHandler from './middleware/global_error_handler';
 import { initializeMongoDbDatabase } from './database';
+import { initializeFirebaseApp } from './firebase/firebase';
 
 // Load environment variables from a .env file into process.env
 dotenv.config();
@@ -24,6 +24,8 @@ const apiVersion = '/api/v1';
 
 // Middleware to parse JSON request bodies
 app.use(express.json());
+
+initializeFirebaseApp();
 
 initializeMongoDbDatabase();
 
@@ -53,8 +55,6 @@ if (process.env.ENV == 'production') {
 app.get('/', function (req: Request, res: Response) {
   res.send('Document Management System');
 });
-
-app.use(apiVersion + '/users', userRouter);
 
 app.use(apiVersion + '/documents', documentRouter);
 

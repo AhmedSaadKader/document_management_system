@@ -29,18 +29,30 @@ const firebaseAuth = async (
 
     next();
   } catch (error) {
+    console.error('Authentication Error:', error);
+
     if (error instanceof Error) {
-      if (error.message.includes('ID token has expired')) {
-        res.status(401).json({
-          error: 'Token Expired',
-          message: 'Your session has expired. Please log in again.',
-        });
-      } else {
-        res.status(401).json({
-          error: 'Authentication Error',
-          message: 'Invalid Firebase token',
-          details: error.message,
-        });
+      switch (true) {
+        case error.message.includes('ID token has expired'):
+          res.status(401).json({
+            error: 'Token Expired',
+            message: 'Your session has expired. Please log in again.',
+          });
+          break;
+        case error.message.includes(
+          'Firebase ID token has incorrect signature'
+        ):
+          res.status(401).json({
+            error: 'Invalid Signature',
+            message: 'The token signature is invalid.',
+          });
+          break;
+        default:
+          res.status(401).json({
+            error: 'Authentication Error',
+            message: 'Invalid Firebase token',
+            details: error.message,
+          });
       }
     } else {
       res.status(500).json({
