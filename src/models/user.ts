@@ -14,7 +14,7 @@ import {
  */
 export type UserBase = {
   /** User's national id */
-  national_id: string;
+  user_id: string;
 
   /** User's first name */
   first_name: string;
@@ -71,7 +71,7 @@ export class UserModel {
   }
 
   async nationalIdExists(nationalId: string): Promise<User | void> {
-    const sql = 'SELECT * FROM users WHERE national_id=($1)';
+    const sql = 'SELECT * FROM users WHERE user_id=($1)';
     const result = await connectionSQLResult(sql, [nationalId]);
     if (!result.rows.length) return;
     return result.rows[0];
@@ -116,13 +116,13 @@ export class UserModel {
    * @throws UserCreationError if the user could not be created.
    */
   async create(userData: UserData): Promise<User> {
-    const { national_id, first_name, last_name, email, password } = userData;
+    const { user_id, first_name, last_name, email, password } = userData;
     const sql = `INSERT INTO 
-      users (national_id, first_name, last_name, email, password_digest)
+      users (user_id, first_name, last_name, email, password_digest)
       VALUES  ($1, $2, $3, $4, $5) RETURNING *`;
     const password_digest = hashPassword(password);
     const result = await connectionSQLResult(sql, [
-      national_id,
+      user_id,
       first_name,
       last_name,
       email,
@@ -171,14 +171,14 @@ export class UserModel {
   //  * @throws UserUpdateError if the user could not be updated.
   //  */
   // async update(email: string, updatedData: Partial<UserBase>): Promise<User> {
-  //   const { first_name, last_name, national_id } = updatedData;
+  //   const { first_name, last_name, user_id } = updatedData;
 
   //   const sql = `
   //     UPDATE users
   //     SET
   //       first_name = COALESCE($1, first_name),
   //       last_name = COALESCE($2, last_name),
-  //       national_id = COALESCE($3, national_id),
+  //       user_id = COALESCE($3, user_id),
   //       updated_at = NOW()
   //     WHERE email = $4
   //     RETURNING *;
@@ -188,7 +188,7 @@ export class UserModel {
   //   const result = await connectionSQLResult(sql, [
   //     first_name ?? null,
   //     last_name ?? null,
-  //     national_id ?? null,
+  //     user_id ?? null,
   //     email,
   //   ]);
 

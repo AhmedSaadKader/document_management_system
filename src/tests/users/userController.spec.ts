@@ -16,7 +16,7 @@ const request = supertest(app);
 
 describe('User Routes and Controllers', () => {
   const mockUser = {
-    national_id: '12345',
+    user_id: '12345',
     first_name: 'John',
     last_name: 'Doe',
     email: 'john.doe@example.com',
@@ -28,7 +28,7 @@ describe('User Routes and Controllers', () => {
 
   beforeAll(async () => {
     userModel = new UserModel();
-    authToken = createJWT(mockUser.national_id, mockUser.email);
+    authToken = createJWT(mockUser.user_id, mockUser.email);
   });
 
   beforeEach(async () => {

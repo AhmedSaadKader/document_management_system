@@ -29,12 +29,12 @@ export const getAllWorkspaces = async (
 
     const skip = (parseInt(page as string) - 1) * parseInt(limit as string);
     const totalWorkspaces = await Workspace.countDocuments({
-      userId: req.user!.national_id,
+      userId: req.user!.user_id,
       deleted: false,
     });
 
     const workspaces = await Workspace.find({
-      userId: req.user!.national_id,
+      userId: req.user!.user_id,
       deleted: false,
     })
       .populate({
@@ -69,20 +69,6 @@ export const getAllWorkspaces = async (
  * This function retrieves all public workspaces from the database, sorts them in descending order
  * by the number of times they have been favorited. If two or more workspaces have the same number of
  * favorites, they are further sorted by the creation date in descending order (most recent first).
- *
- * Aggregation pipeline:
- * - `$match`: Filters the workspaces to include only public ones (`isPublic: true`).
- * - `$lookup`: Joins the `favorites` collection to calculate how many times each workspace has been favorited.
- * - `$addFields`: Adds a `favoritesCount` field to each workspace representing the total number of favorites.
- * - `$sort`: Sorts by `favoritesCount` (descending) and then `createdAt` (descending).
- *
- * @async
- * @function getPublicWorkspaces
- * @param {RequestAuth} req - Express request object (extended with user info in `RequestAuth`).
- * @param {Response} res - Express response object.
- * @param {NextFunction} next - Express `next` function to pass control to error handler middleware.
- * @returns {Promise<void>} - Returns a JSON response containing the sorted public workspaces.
- * @throws {Error} - Passes any errors to the next middleware for error handling.
  */
 export const getPublicWorkspaces = async (
   req: RequestAuth,
@@ -90,9 +76,9 @@ export const getPublicWorkspaces = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const page = parseInt(req.query.page as string) || 1; // Default to page 1
-    const limit = parseInt(req.query.limit as string) || 5; // Default limit to 5
-    const skip = (page - 1) * limit; // Skip items for pagination
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 5;
+    const skip = (page - 1) * limit;
 
     const workspaces = await Workspace.aggregate([
       {
@@ -158,10 +144,6 @@ export const getPublicWorkspaces = async (
 
 /**
  * @description Retrieve a workspace by its ID and its documents, with optional search, sorting, and filtering.
- * @param {RequestAuth} req - The request object, containing user and query information.
- * @param {Response} res - The response object.
- * @param {NextFunction} next - The next middleware function.
- * @returns {void}
  */
 export const getWorkspaceById = async (
   req: RequestAuth,
@@ -171,7 +153,7 @@ export const getWorkspaceById = async (
   try {
     const { workspaceId } = req.params;
     const { search, sortBy, order = 'asc' } = req.query;
-    const userId = req.user!.national_id;
+    const userId = req.user!.user_id;
     const userEmail = req.user!.email;
     const sortOrder = order === 'desc' ? -1 : 1;
 
@@ -223,10 +205,6 @@ export const getWorkspaceById = async (
 
 /**
  * @description Create a new workspace for the authenticated user.
- * @param {RequestAuth} req - The request object, containing the workspace name.
- * @param {Response} res - The response object.
- * @param {NextFunction} next - The next middleware function.
- * @returns {void}
  */
 export const createWorkspace = async (
   req: RequestAuth,
@@ -240,26 +218,23 @@ export const createWorkspace = async (
       workspaceName,
       description,
       isPublic,
-      userId: req.user!.national_id,
+      userId: req.user!.user_id,
       userEmail: req.user!.email,
       parentWorkspace: parentWorkspaceId || null,
     });
 
-    // If parent workspace is specified, add this workspace as a child
     if (parentWorkspaceId) {
       const parentWorkspace = await Workspace.findById(parentWorkspaceId);
       if (!parentWorkspace) {
         return res.status(404).json({ message: 'Parent workspace not found' });
       }
-
-      // Ensure the user has permission to create child workspaces
       if (!req.user!.email)
         return res.status(400).json({ message: 'User email is required' });
 
       const userRole = parentWorkspace.isUserEditorOrViewer(req.user!.email);
       if (
         userRole !== 'editor' &&
-        parentWorkspace.userId !== req.user!.national_id
+        parentWorkspace.userId !== req.user!.user_id
       ) {
         return res.status(403).json({
           message:
@@ -279,10 +254,6 @@ export const createWorkspace = async (
 
 /**
  * @description Add a child workspace to an existing workspace
- * @param {RequestAuth} req - The request object
- * @param {Response} res - The response object
- * @param {NextFunction} next - The next middleware function
- * @returns {void}
  */
 export const addChildWorkspace = async (
   req: RequestAuth,
@@ -295,7 +266,6 @@ export const addChildWorkspace = async (
   try {
     const parentWorkspace = await Workspace.findById(workspaceId);
     const childWorkspace = await Workspace.findById(childWorkspaceId);
-
     if (!parentWorkspace) {
       return next(new NotFoundError('Parent workspace not found'));
     }
@@ -303,23 +273,15 @@ export const addChildWorkspace = async (
     if (!childWorkspace) {
       return next(new NotFoundError('Child workspace not found'));
     }
-
-    // Check user permissions
     if (!req.user!.email)
       return res.status(400).json({ message: 'User email is required' });
     const userRole = parentWorkspace.isUserEditorOrViewer(req.user!.email);
-    if (
-      userRole !== 'editor' &&
-      parentWorkspace.userId !== req.user!.national_id
-    ) {
+    if (userRole !== 'editor' && parentWorkspace.userId !== req.user!.user_id) {
       return res.status(403).json({
         message: 'Only owners and editors can add child workspaces',
       });
     }
-
-    // Add child workspace
     await parentWorkspace.addChildWorkspace(childWorkspaceId);
-
     res.status(200).json({
       message: 'Child workspace added successfully',
       parentWorkspace,
@@ -331,10 +293,6 @@ export const addChildWorkspace = async (
 
 /**
  * @description Remove a child workspace from a parent workspace
- * @param {RequestAuth} req - The request object
- * @param {Response} res - The response object
- * @param {NextFunction} next - The next middleware function
- * @returns {void}
  */
 export const removeChildWorkspace = async (
   req: RequestAuth,
@@ -359,10 +317,7 @@ export const removeChildWorkspace = async (
     if (!req.user!.email)
       return res.status(400).json({ message: 'User email is required' });
     const userRole = parentWorkspace.isUserEditorOrViewer(req.user!.email);
-    if (
-      userRole !== 'editor' &&
-      parentWorkspace.userId !== req.user!.national_id
-    ) {
+    if (userRole !== 'editor' && parentWorkspace.userId !== req.user!.user_id) {
       return res.status(403).json({
         message: 'Only owners and editors can remove child workspaces',
       });
@@ -382,10 +337,6 @@ export const removeChildWorkspace = async (
 
 /**
  * @description Retrieve all child workspaces for a given workspace
- * @param {RequestAuth} req - The request object
- * @param {Response} res - The response object
- * @param {NextFunction} next - The next middleware function
- * @returns {void}
  */
 export const getChildWorkspaces = async (
   req: RequestAuth,
@@ -412,10 +363,6 @@ export const getChildWorkspaces = async (
 
 /**
  * @description Update an existing workspace's details.
- * @param {RequestAuth} req - The request object, containing workspace ID and update data.
- * @param {Response} res - The response object.
- * @param {NextFunction} next - The next middleware function.
- * @returns {void}
  */
 export const updateWorkspace = async (
   req: RequestAuth,
@@ -432,7 +379,7 @@ export const updateWorkspace = async (
       return next(new NotFoundError('Workspace not found'));
     }
 
-    if (workspace.userId !== req.user!.national_id) {
+    if (workspace.userId !== req.user!.user_id) {
       return res
         .status(403)
         .json({ message: 'Not authorized to update this workspace' });
@@ -489,26 +436,21 @@ export const permanentlyDeleteWorkspace = async (
       return next(new NotFoundError('Workspace not found'));
     }
 
-    // Check if the workspace is soft deleted
     if (!workspace.deleted) {
       return res.status(400).json({ message: 'Workspace is not soft deleted' });
     }
 
-    // Handle documents associated with the workspace
     for (const document of workspace.documents) {
       const documentObject = await DocumentModel.findById(document);
-      // Permanently delete the document from the database
       if (!documentObject) continue;
 
       const bucketName = process.env.AWS_BUCKET_NAME as string;
       const fileKey = documentObject.filePath;
       await DocumentModel.deleteOne({ _id: document });
 
-      // Optionally delete the document's file from S3
       await deleteFile(bucketName, fileKey);
     }
 
-    // Permanently delete the workspace
     await Workspace.deleteOne({ _id: workspaceId });
 
     res
@@ -519,7 +461,9 @@ export const permanentlyDeleteWorkspace = async (
   }
 };
 
-// Fetch all soft-deleted workspaces
+/**
+ * Fetch all soft-deleted workspaces
+ */
 export const fetchDeletedWorkspaces = async (
   req: RequestAuth,
   res: Response,
@@ -534,7 +478,9 @@ export const fetchDeletedWorkspaces = async (
   }
 };
 
-// Restore a soft-deleted workspace
+/**
+ * Restore a soft-deleted workspace
+ */
 export const restoreWorkspace = async (
   req: RequestAuth,
   res: Response,
@@ -547,8 +493,6 @@ export const restoreWorkspace = async (
     if (!workspace || !workspace.deleted) {
       return next(new NotFoundError('Workspace not found or not deleted'));
     }
-
-    // Restore the workspace
     workspace.deleted = false;
     workspace.updatedAt = new Date();
     await workspace.save();
@@ -561,10 +505,6 @@ export const restoreWorkspace = async (
 
 /**
  * @description Add a document to a workspace.
- * @param {RequestAuth} req - The request object, containing file and document details.
- * @param {Response} res - The response object.
- * @param {NextFunction} next - The next middleware function.
- * @returns {void}
  */
 export const addDocumentToWorkspace = async (
   req: RequestAuth,
@@ -595,7 +535,7 @@ export const addDocumentToWorkspace = async (
     const newDocument = new Document({
       documentName: documentName || file.originalname,
       documentType,
-      userId: req.user!.national_id,
+      userId: req.user!.user_id,
       userEmail: req.user!.email,
       filePath: file.s3Key,
       originalFileName: file.originalname,
@@ -628,10 +568,6 @@ export const addDocumentToWorkspace = async (
 
 /**
  * @description Remove a document from a workspace and delete the document.
- * @param {RequestAuth} req - The request object, containing workspace ID and document ID.
- * @param {Response} res - The response object.
- * @param {NextFunction} next - The next middleware function.
- * @returns {void}
  */
 export const deleteDocumentFromWorkspace = async (
   req: RequestAuth,
@@ -655,45 +591,8 @@ export const deleteDocumentFromWorkspace = async (
   }
 };
 
-// export const downloadDocumentFromWorkspace = async (
-//   req: RequestAuth,
-//   res: Response,
-//   next: NextFunction
-// ) => {
-//   try {
-//     const { documentId } = req.params;
-//
-//     const document = await Document.findById(documentId);
-//     if (!document) {
-//       return res.status(404).json({ message: 'Document not found' });
-//     }
-//
-//     const filePath = document.filePath;
-//
-//     if (!fs.existsSync(filePath)) {
-//       return res.status(404).json({ message: 'File not found on server' });
-//     }
-//
-//     const headers = {
-//       'Content-Disposition': `attachment; filename=${document.originalFileName}`,
-//       'Content-Type': `${document.fileType}`,
-//     };
-//
-//     res.writeHead(200, headers);
-//
-//     const fileStream = fs.createReadStream(filePath);
-//     fileStream.pipe(res);
-//   } catch (err) {
-//     next(new Error((err as Error).message));
-//   }
-// };
-
 /**
  * @description Stream a document's content to the client.
- * @param {RequestAuth} req - The request object, containing document ID.
- * @param {Response} res - The response object.
- * @param {NextFunction} next - The next middleware function.
- * @returns {void}
  */
 export const viewDocumentFromWorkspace = async (
   req: RequestAuth,
@@ -724,10 +623,6 @@ export const viewDocumentFromWorkspace = async (
 
 /**
  * @description Share a workspace with another user by granting them permissions.
- * @param {RequestAuth} req - The request object, containing workspace ID, user email, and permission level.
- * @param {Response} res - The response object.
- * @param {NextFunction} next - The next middleware function.
- * @returns {void}
  */
 export const shareWorkspace = async (
   req: RequestAuth,
@@ -736,7 +631,7 @@ export const shareWorkspace = async (
 ) => {
   const { email, permission } = req.body;
   const { workspaceId } = req.params;
-  const userId = req.user!.national_id;
+  const userId = req.user!.user_id;
   const userEmail = req.user!.email;
 
   try {
@@ -788,10 +683,6 @@ export const shareWorkspace = async (
 
 /**
  * @description Retrieve all workspaces shared with the authenticated user.
- * @param {RequestAuth} req - The request object, containing user email.
- * @param {Response} res - The response object.
- * @param {NextFunction} next - The next middleware function.
- * @returns {void}
  */
 export const getSharedWorkspaces = async (
   req: RequestAuth,
@@ -817,10 +708,6 @@ export const getSharedWorkspaces = async (
 
 /**
  * @description Retrieve the most recent workspaces created by the authenticated user.
- * @param {RequestAuth} req - The request object, containing user ID.
- * @param {Response} res - The response object.
- * @param {NextFunction} next - The next middleware function.
- * @returns {void}
  */
 export const getRecentWorkspaces = async (
   req: RequestAuth,
@@ -828,7 +715,7 @@ export const getRecentWorkspaces = async (
   next: NextFunction
 ) => {
   try {
-    const userId = req.user!.national_id;
+    const userId = req.user!.user_id;
 
     const recentWorkspaces = await Workspace.find({ userId })
       .sort({ createdAt: -1 })

@@ -38,7 +38,7 @@ describe('User Model Unit Tests', () => {
   // 1. Test for creating a user
   it('should create a new user successfully', async () => {
     const newUser = await userModel.create({
-      national_id: '12345',
+      user_id: '12345',
       first_name: 'John',
       last_name: 'Doe',
       email: 'john.doe@example.com',
@@ -53,7 +53,7 @@ describe('User Model Unit Tests', () => {
   it('should authenticate a user successfully', async () => {
     // Create a user first
     await userModel.create({
-      national_id: '12345',
+      user_id: '12345',
       first_name: 'John',
       last_name: 'Doe',
       email: 'john.doe@example.com',
@@ -72,7 +72,7 @@ describe('User Model Unit Tests', () => {
   // 3. Test for invalid password during authentication
   it('should throw InvalidPasswordError for wrong password', async () => {
     await userModel.create({
-      national_id: '12345',
+      user_id: '12345',
       first_name: 'John',
       last_name: 'Doe',
       email: 'john.doe@example.com',
@@ -87,7 +87,7 @@ describe('User Model Unit Tests', () => {
   // 4. Test for fetching all users
   it('should retrieve all users', async () => {
     await userModel.create({
-      national_id: '12345',
+      user_id: '12345',
       first_name: 'John',
       last_name: 'Doe',
       email: 'john.doe@example.com',
@@ -101,7 +101,7 @@ describe('User Model Unit Tests', () => {
   // 5. Test for fetching a user by email
   it('should find a user by email', async () => {
     await userModel.create({
-      national_id: '12345',
+      user_id: '12345',
       first_name: 'John',
       last_name: 'Doe',
       email: 'john.doe@example.com',
@@ -115,7 +115,7 @@ describe('User Model Unit Tests', () => {
   // 6. Test for deleting a user
   it('should delete a user successfully', async () => {
     await userModel.create({
-      national_id: '12345',
+      user_id: '12345',
       first_name: 'John',
       last_name: 'Doe',
       email: 'john.doe@example.com',

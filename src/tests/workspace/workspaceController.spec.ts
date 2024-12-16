@@ -18,7 +18,7 @@ import Favorite from '../../models/favorite';
 describe('Workspace Controllers', () => {
   let mongoServer: MongoMemoryServer;
   const mockUser = {
-    national_id: '12345',
+    user_id: '12345',
     first_name: 'John',
     last_name: 'Doe',
     email: 'user@example.com',
@@ -28,7 +28,7 @@ describe('Workspace Controllers', () => {
   let authToken: string;
 
   beforeAll(async () => {
-    authToken = createJWT(mockUser.national_id, mockUser.email);
+    authToken = createJWT(mockUser.user_id, mockUser.email);
     mongoServer = await MongoMemoryServer.create();
     const uri = mongoServer.getUri();
     await mongoose.connect(uri);

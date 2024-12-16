@@ -150,8 +150,6 @@ components:
     User:
       type: object
       properties:
-        national_id:
-          type: string
         first_name:
           type: string
         last_name:
@@ -169,8 +167,6 @@ components:
     UserData:
       type: object
       properties:
-        national_id:
-          type: string
         first_name:
           type: string
         last_name:

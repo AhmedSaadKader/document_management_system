@@ -10,9 +10,9 @@ export const validateUserSignup = async (
 ) => {
   const user = new UserModel();
 
-  const { national_id, first_name, last_name, email, password } = req.body;
+  const { user_id, first_name, last_name, email, password } = req.body;
 
-  if (!national_id) next(new Error('Please provide the national id'));
+  if (!user_id) next(new Error('Please provide the national id'));
   if (!first_name) next(new Error('Please provide the first name'));
   if (!last_name) next(new Error('Please provide the last name'));
   if (!email) next(new Error('Please provide the email'));
@@ -25,7 +25,7 @@ export const validateUserSignup = async (
     next(new UserAlreadyExistsError(email));
   }
 
-  if (await user.nationalIdExists(national_id)) {
+  if (await user.nationalIdExists(user_id)) {
     res.status(409).json({
       error: 'National Id already exists',
     });

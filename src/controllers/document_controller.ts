@@ -1,7 +1,6 @@
 import { Response, NextFunction } from 'express';
 import { RequestAuth } from '../../types';
 import DocumentModel from '../models/document';
-// import Workspace from '../models/workspace';
 import {
   DatabaseConnectionError,
   NotFoundError,
@@ -16,11 +15,6 @@ import { Readable } from 'stream';
 
 /**
  * Get the details of a document by its ID.
- *
- * @param req - The request object containing the authenticated user's information and document ID in the URL parameters.
- * @param res - The response object.
- * @param next - The next middleware for error handling.
- * @returns The document details in JSON format.
  */
 export const getDocumentDetails = async (
   req: RequestAuth,
@@ -34,12 +28,6 @@ export const getDocumentDetails = async (
       return next(new NotFoundError('Document'));
     }
 
-    // if (document.userId !== req.user!.national_id) {
-    //   return res
-    //     .status(403)
-    //     .json({ message: 'Not authorized to view this workspace' });
-    // }
-
     res.status(201).json(document);
   } catch (err) {
     next(new Error((err as Error).message));
@@ -48,11 +36,6 @@ export const getDocumentDetails = async (
 
 /**
  * Soft delete a document by marking it as deleted without removing it from the database.
- *
- * @param req - The request object containing the authenticated user's information and document ID in the URL parameters.
- * @param res - The response object.
- * @param next - The next middleware for error handling.
- * @returns A success message if the document was soft-deleted.
  */
 export const softDeleteDocument = async (
   req: RequestAuth,
@@ -79,11 +62,6 @@ export const softDeleteDocument = async (
 
 /**
  * Retrieve all documents that have been soft-deleted (recycle bin) for the authenticated user.
- *
- * @param req - The request object containing the authenticated user's information.
- * @param res - The response object.
- * @param next - The next middleware for error handling.
- * @returns A list of documents that have been soft-deleted.
  */
 export const recycleBin = async (
   req: RequestAuth,
@@ -92,7 +70,7 @@ export const recycleBin = async (
 ) => {
   try {
     const documents = await DocumentModel.find({
-      userId: req.user!.national_id,
+      userId: req.user!.user_id,
       deleted: true,
     });
     res.status(200).json(documents);
@@ -103,11 +81,6 @@ export const recycleBin = async (
 
 /**
  * Restore a soft-deleted document, marking it as active again.
- *
- * @param req - The request object containing the authenticated user's information and document ID in the URL parameters.
- * @param res - The response object.
- * @param next - The next middleware for error handling.
- * @returns A success message if the document was restored.
  */
 export const restoreDocument = async (
   req: RequestAuth,
@@ -138,11 +111,6 @@ export const restoreDocument = async (
 
 /**
  * Permanently delete a soft-deleted document from the database and S3.
- *
- * @param req - The request object containing the authenticated user's information and document ID in the URL parameters.
- * @param res - The response object.
- * @param next - The next middleware for error handling.
- * @returns A success message if the document and its associated S3 file were permanently deleted.
  */
 export const permanentlyDeleteDocument = async (
   req: RequestAuth,
@@ -183,11 +151,6 @@ export const permanentlyDeleteDocument = async (
 
 /**
  * Download a document by its ID.
- *
- * @param req - The request object containing the authenticated user's information and document ID in the URL parameters.
- * @param res - The response object.
- * @param next - The next middleware for error handling.
- * @returns A file stream of the requested document.
  */
 export const downloadDocument = async (
   req: RequestAuth,
@@ -236,11 +199,6 @@ export const downloadDocument = async (
 
 /**
  * Filter documents based on search criteria (e.g., name, sort by date) for the authenticated user.
- *
- * @param req - The request object containing the authenticated user's information and optional query parameters for search and sorting.
- * @param res - The response object.
- * @param next - The next middleware for error handling.
- * @returns A list of documents matching the search criteria.
  */
 export const filterDocuments = async (
   req: RequestAuth,
@@ -248,7 +206,7 @@ export const filterDocuments = async (
   next: NextFunction
 ) => {
   try {
-    const userId = req.user!.national_id;
+    const userId = req.user!.user_id;
     const { search, sortBy, order = 'asc', page = 1, limit = 10 } = req.query;
 
     let query = DocumentModel.find({ userId: userId, deleted: false });
@@ -289,11 +247,6 @@ export const filterDocuments = async (
 
 /**
  * Preview a document by converting it to a base64 string or streaming for audio/video files.
- *
- * @param req - The request object containing the authenticated user's information and document ID in the URL parameters.
- * @param res - The response object.
- * @param next - The next middleware for error handling.
- * @returns A base64-encoded string or stream of the document file.
  */
 export const previewDocument = async (
   req: RequestAuth,
@@ -366,75 +319,3 @@ export const previewDocument = async (
     next(new Error((err as Error).message));
   }
 };
-
-/*
-export const getAllDocuments = async (
-  req: RequestAuth,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const userId = req.user?.national_id;
-
-    if (!userId) {
-      return res.status(401).json({ message: 'Unauthorized access' });
-    }
-
-    // Fetch documents belonging to the authenticated user
-    const documents = await DocumentModel.find({
-      userId: userId,
-      deleted: false,
-    });
-
-    res.json(documents);
-  } catch (err) {
-    next(new DatabaseConnectionError((err as Error).message));
-  }
-};
-*/
-
-/*
-export const createDocument = async (
-  req: RequestAuth,
-  res: Response,
-  next: NextFunction
-) => {
-  const { documentName, workspace } = req.body;
-
-  try {
-    // Check if the workspace exists
-    const workspaceObject = await Workspace.findById(workspace);
-    if (!workspaceObject) {
-      return next(new NotFoundError('Workspace not found'));
-    }
-
-    if (!documentName) {
-      throw new Error('Missing document name');
-    }
-
-    if (!req.user!.national_id) {
-      throw new Error('Missing user id');
-    }
-
-    if (!workspace) {
-      throw new Error('Missing workspace');
-    }
-
-    // Create and save the new document
-    const document = new DocumentModel({
-      documentName,
-      userId: req.user!.national_id,
-      userEmail: req.user!.email,
-      workspace,
-    });
-    await document.save();
-
-    // Add the document to the workspace
-    workspaceObject.addDocument(document._id);
-
-    res.status(201).json(document);
-  } catch (err) {
-    next(new Error((err as Error).message));
-  }
-};
-*/

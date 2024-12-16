@@ -12,8 +12,8 @@ import jwt from 'jsonwebtoken';
  * Ensure that `TOKEN_SECRET` is a strong and secure key stored in your environment
  * variables for signing the JWT.
  */
-export const createJWT = (national_id: string, email: string): string => {
-  return jwt.sign({ national_id, email }, process.env.TOKEN_SECRET!, {
+export const createJWT = (user_id: string, email: string): string => {
+  return jwt.sign({ user_id, email }, process.env.TOKEN_SECRET!, {
     expiresIn: '24h',
   });
 };
