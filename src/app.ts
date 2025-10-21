@@ -30,25 +30,15 @@ initializeFirebaseApp();
 initializeMongoDbDatabase();
 
 // Middleware to enable Cross-Origin Resource Sharing (CORS)
-if (process.env.ENV == 'production') {
-  console.log('production');
-  app.use(
-    cors({
-      origin: ['https://dms-app.netlify.app'],
-      credentials: true,
-      exposedHeaders: ['Content-Disposition'],
-      methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-      allowedHeaders: ['Content-Type', 'Authorization'],
-    })
-  );
-} else {
-  console.log('dev');
-  app.use(
-    cors({
-      exposedHeaders: ['Content-Disposition'],
-    })
-  );
-}
+app.use(
+  cors({
+    origin: true,
+    credentials: true,
+    exposedHeaders: ['Content-Disposition'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  })
+);
 
 // Route handler for the root path
 // Sends a simple response to indicate that the server is running

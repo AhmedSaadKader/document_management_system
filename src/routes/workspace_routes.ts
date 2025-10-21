@@ -6,8 +6,6 @@ import {
   getWorkspaceById,
   addDocumentToWorkspace,
   deleteDocumentFromWorkspace,
-  // downloadDocumentFromWorkspace,
-  // viewDocumentFromWorkspace,
   shareWorkspace,
   getSharedWorkspaces,
   getRecentWorkspaces,
