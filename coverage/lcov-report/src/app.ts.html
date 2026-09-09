@@ -242,14 +242,6 @@ app.use(express.json());
 <span class="missing-if-branch" title="if path not taken" >I</span>if (process.env.ENV == 'production') {
 <span class="cstat-no" title="statement not covered" >  console.log('production');</span>
 <span class="cstat-no" title="statement not covered" >  app.use(</span>
-    cors({
-      origin: ['https://dms-app.netlify.app'],
-      credentials: true,
-      exposedHeaders: ['Content-Disposition'],
-      methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-      allowedHeaders: ['Content-Type', 'Authorization'],
-    })
-  );
 } else {
   console.log('dev');
   app.use(
